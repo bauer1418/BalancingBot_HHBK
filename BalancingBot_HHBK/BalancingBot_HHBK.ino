@@ -5,7 +5,17 @@
 */
 
 // the setup function runs once when you press reset or power the board
+
 void setup() {
+
+	//CMDMESSENGER
+	//EEPROM
+	//MPU6050
+	//KALMAN
+	//PID
+	//MOTOR
+	
+	
 	
 }
 
