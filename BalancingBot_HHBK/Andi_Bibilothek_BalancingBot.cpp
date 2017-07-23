@@ -6,4 +6,3 @@
 
 #include "Andi_Bibilothek_BalancingBot.h"
 
-

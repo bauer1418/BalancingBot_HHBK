@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BalancingBot_HHBK.ino" />
+    <None Include="Messenger_Befehle.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.BalancingBot_HHBK.vsarduino.h">
