@@ -3,19 +3,8 @@
  Created:	23.07.2017 16:57:37
  Author:	Andreas Bauer
 */
-enum Befehle
-{
-	
-	cmd_Statusmeldung,			//Statusmeldungen z.B.: Setup beendet
-	cmd_Akkustand,				//Aktuelle Spannung des Primärakkus
-	cmd_KalmanWinkel,			//Aktueller Winkel aus dem Kalman Filter
-	cmd_RAW_Werte,				//RAW-Werte aus dem MPU ohne Bearbeitung
-	cmd_Offset_Werte,			//Offset-Werte für die XYZ Achsen des MPU6050
-	cmd_MPU_Kalibrieren,		//Automatik Kalibrierung durchführen
-	
-	cmd_PID_Winkel_MinMax,		//Winkel Regler Min und Max Werte setzen
-	cmd_PID_Winkel_Sollwert		//Winkel Regler Sollwert setzen
-};
+
+
 
 enum Statusmeldungen
 {
@@ -26,6 +15,7 @@ enum Statusmeldungen
 void Setup_cmdMessenger()
 {
 	cmdMessenger.attach(cmd_Statusmeldung,Statusmeldung);
+	cmdMessenger.attach(cmd_Akkustand,Statusmeldung);
 }
 
 
@@ -34,12 +24,14 @@ void Setup_cmdMessenger()
 
 void Statusmeldung()
 {
-
+	cmdMessenger.sendCmd(cmd_Statusmeldung,"Hallo Test!");
 }
 
 void Akkustand()
 {
-
+	cmdMessenger.sendCmdStart(cmd_Akkustand);	//Mehrfach Senden starten
+	cmdMessenger.sendCmdArg(15.0);				//Argument
+	cmdMessenger.sendCmdEnd();					//Senden beenden
 }
 
 void KalmanWinkel()
