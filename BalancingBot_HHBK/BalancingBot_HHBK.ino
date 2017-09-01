@@ -6,6 +6,7 @@
 
 //Benötigte Bibilotheken
 
+#include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
 #include "Andi_Bibilothek_BalancingBot.h"
 #include <Wire.h>
@@ -15,6 +16,7 @@
 #include <Kalman.h>
 #include <EEPROM.h>
 #include <PID_v1_Andi.h>
+#include "Messenger_Enum.h"
 
 //Variablen
 
@@ -23,19 +25,7 @@
 
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 
-enum Befehle
-{
-	
-	cmd_Statusmeldung,			//Statusmeldungen z.B.: Setup beendet
-	cmd_Akkustand,				//Aktuelle Spannung des Primärakkus
-	cmd_KalmanWinkel,			//Aktueller Winkel aus dem Kalman Filter
-	cmd_RAW_Werte,				//RAW-Werte aus dem MPU ohne Bearbeitung
-	cmd_Offset_Werte,			//Offset-Werte für die XYZ Achsen des MPU6050
-	cmd_MPU_Kalibrieren,		//Automatik Kalibrierung durchführen
-	
-	cmd_PID_Winkel_MinMax,		//Winkel Regler Min und Max Werte setzen
-	cmd_PID_Winkel_Sollwert,		//Winkel Regler Sollwert setzen
-};
+
 
  //the setup function runs once when you press reset or power the board
 void setup() 
@@ -49,6 +39,8 @@ void setup()
  //the loop function runs over and over again until power down or reset
 void loop() 
 {
-
+	//Kalmanfilter ausführen
+	//PID-Regler ausführen
+	//Motoren einstellen
   cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }

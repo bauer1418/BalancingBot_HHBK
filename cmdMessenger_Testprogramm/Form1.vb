@@ -75,7 +75,8 @@ Public Class Form1
 
     Private Sub bttBefehl_senden_Click(sender As Object, e As EventArgs) Handles bttBefehl_senden.Click
         If rbbCOMStatus.Checked = True Then
-            Dim Command = New SendCommand(cmbBefehl.SelectedIndex, True)
+            Dim Command = New SendCommand(cmbBefehl.SelectedIndex, False)
+
             Messenger.SendCommand(Command)
         Else
             MsgBox("Arduino nicht verbunden!", vbCritical, "Keine Verbindung")
@@ -83,8 +84,8 @@ Public Class Form1
     End Sub
     Private Sub AttachCallbacks()
         Messenger.Attach(AddressOf OnUnknownCommand)
-        Messenger.Attach(AddressOf Statusmeldung)
-        Messenger.Attach(AddressOf Akkustatus)
+        Messenger.Attach(Befehle.cmd_Statusmeldung, AddressOf Statusmeldung)
+        Messenger.Attach(Befehle.cmd_Akkustand, AddressOf Akkustatus)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
@@ -105,7 +106,8 @@ Public Class Form1
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
     Private Sub Akkustatus(ByVal arguments As ReceivedCommand)
-        lbEmpfangeDaten.Items.Add("Akku1:" + arguments.ReadDoubleArg.ToString())
+        MsgBox(arguments.CmdId)
+        lbEmpfangeDaten.Items.Add("Akkuspannung: " + arguments.ReadFloatArg().ToString("0.00V"))
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
 
