@@ -14,12 +14,16 @@ void Setup_cmdMessenger()
 	cmdMessenger.attach(cmd_Fehlermeldung,Statusmeldung);
 	cmdMessenger.attach(cmd_Akkustand_Prozent,Akkustand_Prozent);
 	cmdMessenger.attach(cmd_RAW_Werte,RAW_Werte);
+
+
+	cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
 }
 
 
 
 /*------------CALLBACKS---------------*/
 
+//Aktuellen Systemstatus senden
 void Statusmeldung()
 {
 	cmdMessenger.sendCmd(cmd_Statusmeldung,Status);

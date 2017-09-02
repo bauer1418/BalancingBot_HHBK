@@ -12,7 +12,12 @@
 	#else
 		#include "WProgram.h"
 	#endif
+//Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 void Pin_Setup();
 
+//Spannungsteilerberechnung für Spannungskontrolle
+double Spannungsteiler (double R1, double R2, int AnalogEingangsPin);
+bool Akkuueberwachung (int AkkuPin1, int AkkuPin2);
+	
 #endif
 

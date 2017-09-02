@@ -5,6 +5,10 @@
 */
 
 #include "Andi_Bibilothek_BalancingBot.h"
+
+const int SpannungsmessungR1 = 22000;//Vorwiderstand für Akkumessungen
+const int SpannungsmessungR2 = 3900;//Messwiderstand für Akkumessungen
+double Akku_Messbereich = 0.00;
 //Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 void Pin_Setup()
 {
@@ -62,3 +66,27 @@ double Spannungsteiler (double R1, double R2, int AnalogEingangsPin)
 	return Spannung;
 }
 
+//Akkumessungen auswerten und in den Variablen die entsprechende Werte eintragen
+//Return TRUE Akkustatus in Ordnung FALSE Akkustatus niedrig oder kristisch
+bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
+{
+	if (Akku_Messbereich==0.00)
+	{
+		Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
+	}
+
+	//Akkumessung für akku 2 Akku GND auf A6
+	//Akkumessung für akku 1 Akkugesammnt GND auf A7
+	Akkuspannung2= Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
+	Akkuspannung1=Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1)-Akkuspannung2;
+	
+
+}
+
+//Spannungsbereich für die Akkumessungen berechnen Beispiel 8,4V-6V=2,4V
+double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax)
+{
+	double Messbereich =0.00;
+	Messbereich= AkkuMax-AkkuMin;
+	return Messbereich;
+}
