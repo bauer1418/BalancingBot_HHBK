@@ -12,5 +12,7 @@
 	#else
 		#include "WProgram.h"
 	#endif
+void Pin_Setup();
+
 #endif
 

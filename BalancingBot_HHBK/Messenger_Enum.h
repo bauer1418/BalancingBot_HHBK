@@ -10,23 +10,26 @@ enum Befehle
 	
 	cmd_Statusmeldung,			//Statusmeldungen z.B.: Setup beendet
 	cmd_Fehlermeldung,			//Fehlermeldungen ausgeben
-	cmd_Akkustand_Prozent,				//Aktuelle Spannung des Akkupacks in %
+	cmd_Akkustand_Prozent,		//Aktuelle Spannung des Akkupacks in %
 	cmd_KalmanWinkel,			//Aktueller Winkel aus dem Kalman Filter
 	cmd_RAW_Werte,				//RAW-Werte aus dem MPU ohne Bearbeitung
 	cmd_Offset_Werte,			//Offset-Werte für die XYZ Achsen des MPU6050
 	cmd_MPU_Kalibrieren,		//Automatik Kalibrierung durchführen
-	
 	cmd_PID_Winkel_MinMax,		//Winkel Regler Min und Max Werte setzen
 	cmd_PID_Winkel_Sollwert,	//Winkel Regler Sollwert setzen
+	cmd_Umkipperkennung_quitt,	//Umkipperkennung zurücksetzen
+
 };
 
 enum Statusmeldungen
 {
+	System_Start,				//Systemstart wird durchgeführt
 	Setup_beendet,				//Setup abgeschlossen
 	System_Bereit,				//System ist für den Balancing Betrieb bereit
 	Akkustand_niedrig,			//Akkustand unter 25% 
 	Akku_kritisch,				//Akkustand unter 10% Balancing Betrieb gesperrt!
 	Umkipperkennung_ausgeloest, //Umkipperkennung hat angesprochen Winkel größer als 25°
+	Fehler,						//System ist gestört siehe Fehlermeldungen
 
 };
 

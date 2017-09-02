@@ -4,6 +4,7 @@
  Author:	Andreas Bauer
 */
 
+//Variablen
 
 
 
@@ -21,7 +22,7 @@ void Setup_cmdMessenger()
 
 void Statusmeldung()
 {
-	cmdMessenger.sendCmd(cmd_Statusmeldung,"Hallo Test!");
+	cmdMessenger.sendCmd(cmd_Statusmeldung,Status);
 }
 
 void Akkustand_Prozent()

@@ -18,8 +18,10 @@
 #include <PID_v1_Andi.h>
 #include "Messenger_Enum.h"
 
-//Variablen
 
+
+//Variablen
+int Status = 0;		//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
 
 
 
@@ -32,8 +34,10 @@ void setup()
 {
 	Setup_cmdMessenger();
 	Serial.begin(115200);
+	Pin_Setup();
 	cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
-	cmdMessenger.sendCmd(cmd_Statusmeldung, (F("Setup beendet!")));
+	Status=Setup_beendet;
+	Statusmeldung();
 }
 
  //the loop function runs over and over again until power down or reset
