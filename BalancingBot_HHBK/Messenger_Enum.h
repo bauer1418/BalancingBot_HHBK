@@ -36,11 +36,14 @@ enum Statusmeldungen
 enum Fehlermeldungen
 {
 	Kein_Fehler_vorhanden,		//Kein Fehler aktuell vorhanden
-	MPU_Fehler,					//MPU gestört
 	Motortreiber_Rechts,		//Motortreiber für Motor Rechts gestört
 	Motortreiber_Links,			//Motortreiber für Motor Links gestört
 	Akku1_Messung,				//Akkumessung Akku1 außer Toleranz
 	Akku2_Messung,				//Akkumessung Akku2 außer Toleranz
+	MPU_READ_TIMEOUT,			//MPU Fehler Komunikation hat Read TIMEOUT
+	MPU_Write_FAILED,			//MPU Fehler Daten Schreiben war nicht möglich
+	MPU_READ_FAILED,			//MPU Fehler Daten Lesen war nicht möglich
+	MPU_NOT_FOUND,				//MPU Fehler MPU WHO IAM Register konnte nicht gelesen werden
 
 };
 
