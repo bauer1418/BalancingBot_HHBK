@@ -24,6 +24,8 @@ enum Befehle
 enum Statusmeldungen
 {
 	System_Start,				//Systemstart wird durchgeführt
+	MPU_Start,					//MPU Systemstart
+	MPU_Setup_OK,				//MPU Setup i.O.
 	Setup_beendet,				//Setup abgeschlossen
 	System_Bereit,				//System ist für den Balancing Betrieb bereit
 	Akkustand_niedrig,			//Akkustand unter 25% 
@@ -44,7 +46,6 @@ enum Fehlermeldungen
 	MPU_Write_FAILED,			//MPU Fehler Daten Schreiben war nicht möglich
 	MPU_READ_FAILED,			//MPU Fehler Daten Lesen war nicht möglich
 	MPU_NOT_FOUND,				//MPU Fehler MPU WHO IAM Register konnte nicht gelesen werden
-
 };
 
 

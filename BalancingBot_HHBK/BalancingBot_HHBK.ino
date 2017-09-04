@@ -5,17 +5,18 @@
 */
 
 //Benötigte Bibilotheken
+
+#include <EEPROMVar.h>
+#include <EEPROMex.h>
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
 #include "Andi_Bibilothek_BalancingBot.h"
-#include <EEPROM.h>
 #include <PID_v1_Andi.h>
 #include "Messenger_Enum.h"
 
-int Status = 0;							//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
 
-
-
+byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
+byte Fehlerspeicher=0;
 	
 double Akkuspannung1 = 0.00;			//Akkuspannung 1 aus der Akkuüberwachung
 double Akkuspannung2 = 0.00;			//Akkuspannung 2 aus der Akkuüberwachung
@@ -23,36 +24,59 @@ double AkkuSpannungMin = 6.00;			//AkkuEntladespannung 0%
 double AkkuSpannungKritisch = 6.24;		//Akkuspannung 10%
 double AkkuSpannungNiedrig = 6.60;		//Akkuspannung 25%
 double AkkuSpannungMax = 8.40;			//Akkuspannung bei Vollgeladenem Akku 100%
-int Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
+byte Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
 double AkkuSpannungGesamt = 0.0;		//Akkuspannung beide Packs
-double Akku_Messbereich = 0.00;
-const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen
-const int SpannungsmessungR2 = 3900;	//Messwiderstand für Akkumessungen
+double Akku_Messbereich = 0.00;			//Messbereich für die Akkuspannung
+const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen in Ohm
+const int SpannungsmessungR2 = 3900;	//Messwiderstand für Akkumessungen in Ohm
+
+
+double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
+double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
+
+PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
+PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
-
-
 
  //the setup function runs once when you press reset or power the board
 void setup() 
 {
+	NeoPixel_Setup(25);
+
 	Setup_cmdMessenger();
+	
 	Serial.begin(115200);
+	
 	Pin_Setup();
 	
+	if (MPUsetup==false)
+	{
+		Status=Fehler;
+	}
+
 	Status=Setup_beendet;
+
 	Statusmeldung();
 
+	
+		
 }
+
 
  //the loop function runs over and over again until power down or reset
 void loop() 
 {
+	Zykluszeit_Messung();
 	Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
-	//Kalmanfilter ausführen
+	MPU_Zyklus();
 	//PID-Regler ausführen
+	//Umkippschutz auswerten
 	//Motoren einstellen
-  cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
+	PID_Regler_Geschwindigkeit.Compute();
+	PID_Regler_Winkel.Compute();
+
+	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }
 
 

@@ -51,5 +51,7 @@ extern "C" void __cxa_pure_virtual() {;}
 #undef PSTR
 #define PSTR(string_literal) ((const PROGMEM char *)(string_literal))
 #include "BalancingBot_HHBK.ino"
+#include "MPU6050_BalancingBot_HHBK.ino"
 #include "Messenger_Befehle.ino"
+#include "NeoPixel.ino"
 #endif
