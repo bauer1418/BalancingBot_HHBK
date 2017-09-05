@@ -115,6 +115,7 @@ Partial Class Form1
         Me.Controls.Add(Me.cmbCOMPort)
         Me.Controls.Add(Me.bttCOMVerbinden)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.MaximizeBox = False
         Me.Name = "Form1"
         Me.Text = "Arduino COM Testprogramm"
         Me.ResumeLayout(False)

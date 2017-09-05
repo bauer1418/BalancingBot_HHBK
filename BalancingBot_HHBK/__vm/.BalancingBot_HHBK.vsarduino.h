@@ -12,6 +12,7 @@
 #define _VSARDUINO_H_
 #define __AVR_ATmega328p__
 #define __AVR_ATmega328P__
+#define _VMDEBUG 1
 #define F_CPU 16000000L
 #define ARDUINO 10800
 #define ARDUINO_AVR_NANO
@@ -51,6 +52,7 @@ extern "C" void __cxa_pure_virtual() {;}
 #undef PSTR
 #define PSTR(string_literal) ((const PROGMEM char *)(string_literal))
 #include "BalancingBot_HHBK.ino"
+#include "Andi_Bibilothek_BalancingBot.ino"
 #include "MPU6050_BalancingBot_HHBK.ino"
 #include "Messenger_Befehle.ino"
 #include "NeoPixel.ino"

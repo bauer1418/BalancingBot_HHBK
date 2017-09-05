@@ -25,7 +25,6 @@
  */
 
 #define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
-//double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
 Kalman kalmanX; // Create the Kalman instances
 Kalman kalmanY;// Create the Kalman instances
@@ -47,6 +46,7 @@ uint8_t i2cData[14]; // Buffer for I2C data
 uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes);
 uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool sendStop);
 uint8_t i2cWrite(uint8_t registerAddress, uint8_t data, bool sendStop);
+
 
 
 
@@ -99,6 +99,42 @@ void Offset_acelz(double OffsetWert)
 
 }
 
+//Auslesen der aktuellen Offset MPU Werte für gyrox
+double Offset_gyrox()
+{
+	return offset_gyroX;
+}
+//MPU Offset Wert für gyrox setzen
+void Offset_gyrox(double OffsetWert)
+{
+	offset_gyroX= OffsetWert;
+
+}
+//Auslesen der aktuellen Offset MPU Werte für gyroy
+double Offset_gyroy()
+{
+	return offset_gyroY;
+}
+//MPU Offset Wert für gyroy setzen
+void Offset_gyroy(double OffsetWert)
+{
+	offset_gyroY= OffsetWert;
+
+}
+//Auslesen der aktuellen MPU Offset Werte für gyroz
+double Offset_gyroz()
+{
+	return offset_gyroZ;
+}
+//MPU Offset Wert für gyroz setzen
+void Offset_gyroz(double OffsetWert)
+{
+	offset_gyroZ= OffsetWert;
+
+}
+
+
+
 
 //MPU Setup mit I2C-Start
 //Bei Fehlern wird der Fehlercode in den Systemstatus geschrieben und es wird FALSE zurückgeschickt
@@ -120,10 +156,11 @@ bool MPUsetup() {
   if (i2cData[0] != 0x68) { // Read "WHO_AM_I" register
 		
 	  //Serial.print(F("Error reading sensor"));
-	Fehlerspeicher=MPU_NOT_FOUND;
+	Fehlerspeicher=8;
 	Wire.end();
-	  return false;
+	return false;
 		//while (1);
+	
   }
 
   delay(100); // Wait for sensor to stabilize
@@ -160,7 +197,9 @@ bool MPUsetup() {
   //compAngleY = pitch;
 
   timer = micros();
+  Fehlerspeicher=MPU_NOT_FOUND;
   Status=MPU_Setup_OK;
+
   return true;
 
 }
@@ -310,7 +349,8 @@ uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool se
   Wire.write(data, length);
   uint8_t rcode = Wire.endTransmission(sendStop); // Returns 0 on success
   if (rcode) {
-    Status=Fehler;
+    
+	  Status=Fehler;
 	Fehlerspeicher=MPU_Write_FAILED;
 	  /*Serial.print(F("i2cWrite failed: "));
     Serial.println(rcode);*/

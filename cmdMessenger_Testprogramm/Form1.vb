@@ -8,15 +8,19 @@ Public Class Form1
     Dim Messenger As CmdMessenger
 
     Enum Befehle
-        cmd_Statusmeldung           'Statusmeldungen z.B.: Setup beendet
-        cmd_Akkustand               'Aktuelle Spannung des Primärakkus
-        cmd_KalmanWinkel            'Aktueller Winkel aus dem Kalman Filter
-        cmd_RAW_Werte               'RAW-Werte aus dem MPU ohne Bearbeitung
-        cmd_Offset_Werte            'Offset-Werte für die XYZ Achsen des MPU6050
-        cmd_MPU_Kalibrieren         'Automatik Kalibrierung durchführen
 
+        cmd_Statusmeldung           'Statusmeldungen z.B.: Setup beendet
+        cmd_Fehlermeldung           'Fehlermeldungen ausgeben
+        cmd_Akkustand_Prozent       'Aktuelle Spannung des Akkupacks in %
+        cmd_KalmanWinkel            'Aktueller Winkel aus dem Kalman Filter
+        'cmd_RAW_Werte				RAW-Werte aus dem MPU ohne Bearbeitung
+        cmd_Offset_Werte            'Offset-Werte für die XYZ Achsen des MPU6050
+        cmd_MPU_Kalibrieren     'Automatik Kalibrierung durchführen
         cmd_PID_Winkel_MinMax       'Winkel Regler Min und Max Werte setzen
-        cmd_PID_Winkel_Sollwert     'Winkel Regler Sollwert setzen
+        cmd_PID_Winkel_Sollwert 'Winkel Regler Sollwert setzen
+        cmd_Umkipperkennung_quitt   'Umkipperkennung zurücksetzen
+        cmd_MPU_Temperatur          'MPU Temperatur senden
+        cmd_MotorenEINAUS           'Motoren Status lesen
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -37,8 +41,11 @@ Public Class Form1
         For Each Port In My.Computer.Ports.SerialPortNames
             cmbCOMPort.Items.Add(Port)
         Next
-        cmbCOMPort.SelectedItem = cmbCOMPort.Items(0)
-
+        Try
+            cmbCOMPort.SelectedItem = cmbCOMPort.Items(0)
+        Catch
+            MsgBox("Keine COM-Ports gefunden", MsgBoxStyle.Critical, "Fehler")
+        End Try
         For Each Befehl In System.Enum.GetNames(GetType(Befehle))
             cmbBefehl.Items.Add(Befehl)
         Next
@@ -75,7 +82,7 @@ Public Class Form1
 
     Private Sub bttBefehl_senden_Click(sender As Object, e As EventArgs) Handles bttBefehl_senden.Click
         If rbbCOMStatus.Checked = True Then
-            Dim Command = New SendCommand(cmbBefehl.SelectedIndex, False)
+            Dim Command = New SendCommand(cmbBefehl.SelectedIndex, txtArgument.Text)
 
             Messenger.SendCommand(Command)
         Else
@@ -85,7 +92,11 @@ Public Class Form1
     Private Sub AttachCallbacks()
         Messenger.Attach(AddressOf OnUnknownCommand)
         Messenger.Attach(Befehle.cmd_Statusmeldung, AddressOf Statusmeldung)
-        Messenger.Attach(Befehle.cmd_Akkustand, AddressOf Akkustatus)
+        Messenger.Attach(Befehle.cmd_Fehlermeldung, AddressOf Neue_Daten)
+        Messenger.Attach(Befehle.cmd_Akkustand_Prozent, AddressOf Akkustatus)
+        Messenger.Attach(Befehle.cmd_KalmanWinkel, AddressOf Neue_Daten)
+        Messenger.Attach(Befehle.cmd_MPU_Temperatur, AddressOf Neue_Daten)
+        Messenger.Attach(Befehle.cmd_MotorenEINAUS, AddressOf Neue_Daten)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
@@ -110,5 +121,10 @@ Public Class Form1
         lbEmpfangeDaten.Items.Add("Akkuspannung: " + arguments.ReadFloatArg().ToString("0.00V"))
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
+    Private Sub Neue_Daten(ByVal arguments As ReceivedCommand)
+        'MsgBox(arguments.CmdId)
+        lbEmpfangeDaten.Items.Add(arguments.ReadFloatArg().ToString)
+        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
 
+    End Sub
 End Class

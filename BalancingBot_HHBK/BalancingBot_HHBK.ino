@@ -10,7 +10,7 @@
 #include <EEPROMex.h>
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
-#include "Andi_Bibilothek_BalancingBot.h"
+
 #include <PID_v1_Andi.h>
 #include "Messenger_Enum.h"
 
@@ -29,6 +29,8 @@ double AkkuSpannungGesamt = 0.0;		//Akkuspannung beide Packs
 double Akku_Messbereich = 0.00;			//Messbereich für die Akkuspannung
 const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen in Ohm
 const int SpannungsmessungR2 = 3900;	//Messwiderstand für Akkumessungen in Ohm
+unsigned long Zykluszeit=0;				//akutelle Zykluszeit
+bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
 
 
 double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
@@ -53,28 +55,41 @@ void setup()
 	if (MPUsetup==false)
 	{
 		Status=Fehler;
+		Fehlerspeicher=8;
 	}
-
-	Status=Setup_beendet;
-
-	Statusmeldung();
-
+	else
+	{
+		Status=Setup_beendet;
+	}
 	
-		
+	Statusmeldung();
+			
 }
 
 
  //the loop function runs over and over again until power down or reset
 void loop() 
 {
-	Zykluszeit_Messung();
-	Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
-	MPU_Zyklus();
-	//PID-Regler ausführen
+	Zykluszeit = Zykluszeit_Messung();
+	//Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
+	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
+	/*if (Fehlerspeicher!=MPU_NOT_FOUND || Fehlerspeicher!=MPU_READ_FAILED || Fehlerspeicher!=MPU_READ_TIMEOUT || Fehlerspeicher!=MPU_Write_FAILED)
+	{*/
+
+		MPU_Zyklus();
+	/*}*/
+	
+	if (MotorenEINAUS==true)
+	{
+		//Winkel auslesen
+		Eingang_PID_Winkel=GET_KalmanWinkelX();
+		//PID-Regler ausführen
+		PID_Regler_Winkel.Compute();
+	}
 	//Umkippschutz auswerten
 	//Motoren einstellen
-	PID_Regler_Geschwindigkeit.Compute();
-	PID_Regler_Winkel.Compute();
+	//PID_Regler_Geschwindigkeit.Compute();
+	
 
 	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }
@@ -113,3 +128,4 @@ bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
 		return true;
 	}
 }
+

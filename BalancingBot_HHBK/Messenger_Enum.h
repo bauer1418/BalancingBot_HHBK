@@ -12,12 +12,14 @@ enum Befehle
 	cmd_Fehlermeldung,			//Fehlermeldungen ausgeben
 	cmd_Akkustand_Prozent,		//Aktuelle Spannung des Akkupacks in %
 	cmd_KalmanWinkel,			//Aktueller Winkel aus dem Kalman Filter
-	cmd_RAW_Werte,				//RAW-Werte aus dem MPU ohne Bearbeitung
+	//cmd_RAW_Werte,				//RAW-Werte aus dem MPU ohne Bearbeitung
 	cmd_Offset_Werte,			//Offset-Werte für die XYZ Achsen des MPU6050
 	cmd_MPU_Kalibrieren,		//Automatik Kalibrierung durchführen
 	cmd_PID_Winkel_MinMax,		//Winkel Regler Min und Max Werte setzen
 	cmd_PID_Winkel_Sollwert,	//Winkel Regler Sollwert setzen
 	cmd_Umkipperkennung_quitt,	//Umkipperkennung zurücksetzen
+	cmd_MPU_Temperatur,			//MPU Temperatur senden
+	cmd_MotorenEINAUS,			//Motoren Ein(true) oder Aus(false) schalten
 
 };
 
