@@ -136,6 +136,7 @@ void Offset_gyroz(double OffsetWert)
 //Es werden für die 6 verschiedene Offsetwerte ein Durchschnittswert aus 100 Messwerten gebildet sollange der Sensor nicht bewegt wird.
 void MPU6050_Kalibrieren()
 {
+			cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibierung aktiv"));
 			double Cal_accX, Cal_accY, Cal_accZ, Cal_gyoX, Cal_gyoY, Cal_gyoZ;
 			//Kalibrierwerte auf Startwerte des MPU stellen
 			Cal_accX=accX;
@@ -145,7 +146,7 @@ void MPU6050_Kalibrieren()
 			Cal_gyoY=gyroY;
 			Cal_gyoZ=gyroZ;
 
-			cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibrierung aktiv"));
+			//cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibrierung aktiv"));
 			for (int i = 1; i < 99; i++)
 			{
 				MPU_Zyklus();

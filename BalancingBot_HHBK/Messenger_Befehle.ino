@@ -103,17 +103,15 @@ void MPU_Kalibrieren()
 	MotorenEINAUS=false;   
 	cmdMessenger.sendCmdStart(cmd_Anzeige_Text);
 	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("MPU Kalibrierung"));
-	//cmdMessenger.sendCmdArg(F("MPU Kalibrierung"));
+	
 	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Bitte Sensor nicht bewegen!"));
-	//cmdMessenger.sendCmdArg(F("Bitte Sensor nicht bewegen!"));
+	
 	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibierung startet in 5sec!"));
-	//cmdMessenger.sendCmdArg(F("Kalibierung startet in 5sec!"));
-
+	
 	delay(5000);
-	//cmdMessenger.sendCmdArg(F("Kalibierung aktiv"));
-	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibierung aktiv"));
+	
 	MPU6050_Kalibrieren();
-	//cmdMessenger.sendCmdEnd();
+	
 	Offset_Werte_senden(cmd_MPU_Kalibrieren);	
 }
 
