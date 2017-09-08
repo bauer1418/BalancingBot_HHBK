@@ -71,12 +71,17 @@ void setup()
 void loop() 
 {
 	Zykluszeit = Zykluszeit_Messung();
+	Zeit_Takt_20ms();
+
+
+
 	//Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
 	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
 	/*if (Fehlerspeicher!=MPU_NOT_FOUND || Fehlerspeicher!=MPU_READ_FAILED || Fehlerspeicher!=MPU_READ_TIMEOUT || Fehlerspeicher!=MPU_Write_FAILED)
 	{*/
 
 		MPU_Zyklus();
+		Zyklusdaten_senden();
 	/*}*/
 	
 	if (MotorenEINAUS==true)

@@ -21,6 +21,8 @@ Public Class Form1
         cmd_Umkipperkennung_quitt   'Umkipperkennung zurücksetzen
         cmd_MPU_Temperatur          'MPU Temperatur senden
         cmd_MotorenEINAUS           'Motoren Status lesen
+        cmd_Anzeige_Text            'Anzuzeigender Text aus dem Arduino
+        cmd_Zyklusdaten             'Zyklusdaten aus dem Arduino
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -92,11 +94,15 @@ Public Class Form1
     Private Sub AttachCallbacks()
         Messenger.Attach(AddressOf OnUnknownCommand)
         Messenger.Attach(Befehle.cmd_Statusmeldung, AddressOf Statusmeldung)
-        Messenger.Attach(Befehle.cmd_Fehlermeldung, AddressOf Neue_Daten)
+        Messenger.Attach(Befehle.cmd_Fehlermeldung, AddressOf Neue_Daten_Float)
         Messenger.Attach(Befehle.cmd_Akkustand_Prozent, AddressOf Akkustatus)
-        Messenger.Attach(Befehle.cmd_KalmanWinkel, AddressOf Neue_Daten)
-        Messenger.Attach(Befehle.cmd_MPU_Temperatur, AddressOf Neue_Daten)
-        Messenger.Attach(Befehle.cmd_MotorenEINAUS, AddressOf Neue_Daten)
+        Messenger.Attach(Befehle.cmd_KalmanWinkel, AddressOf Neue_Daten_Float)
+        Messenger.Attach(Befehle.cmd_MPU_Temperatur, AddressOf Neue_Daten_Float)
+        Messenger.Attach(Befehle.cmd_MotorenEINAUS, AddressOf Neue_Daten_Float)
+        Messenger.Attach(Befehle.cmd_Anzeige_Text, AddressOf Neue_Daten_String)
+        Messenger.Attach(Befehle.cmd_MPU_Kalibrieren, AddressOf Neue_Daten_Float)
+        Messenger.Attach(Befehle.cmd_Offset_Werte, AddressOf Neue_Daten_Float)
+        Messenger.Attach(Befehle.cmd_Zyklusdaten, AddressOf Zyklusdaten_auswerten)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
@@ -118,13 +124,32 @@ Public Class Form1
     End Sub
     Private Sub Akkustatus(ByVal arguments As ReceivedCommand)
         MsgBox(arguments.CmdId)
-        lbEmpfangeDaten.Items.Add("Akkuspannung: " + arguments.ReadFloatArg().ToString("0.00V"))
+        lbEmpfangeDaten.Items.Add("Akkustand: " + arguments.ReadFloatArg().ToString("0.0%"))
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
-    Private Sub Neue_Daten(ByVal arguments As ReceivedCommand)
-        'MsgBox(arguments.CmdId)
-        lbEmpfangeDaten.Items.Add(arguments.ReadFloatArg().ToString)
-        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
+    Private Sub Neue_Daten_String(ByVal arguments As ReceivedCommand)
+        While arguments.Available = True
+            lbEmpfangeDaten.Items.Add(arguments.ReadStringArg().ToString)
+            lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
+        End While
+    End Sub
+    Private Sub Neue_Daten_Float(ByVal arguments As ReceivedCommand)
+        While arguments.Available = True
+            lbEmpfangeDaten.Items.Add(arguments.ReadFloatArg().ToString)
+            lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
+        End While
+    End Sub
+    Private Sub Zyklusdaten_auswerten(ByVal arguments As ReceivedCommand)
+        Dim Winkel, PIDOut As Double
+        Dim Zykluszeit As Integer
+        Dim Motorenstatus As Boolean
+        Winkel = arguments.ReadFloatArg()
+        PIDOut = arguments.ReadFloatArg()
+        Motorenstatus = arguments.ReadBoolArg()
+        Zykluszeit = arguments.ReadUInt32Arg()
 
+        lbEmpfangeDaten.Items.Add("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
+        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
 End Class
+

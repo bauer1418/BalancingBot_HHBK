@@ -40,6 +40,7 @@
 
 unsigned long  Startzeitpunkt_Zeit_Takt_20ms=0;//Zeitpunkt der letzen Ausführung des 20ms Takts
 unsigned long  Startzeitpunkt_Zykluszeit_Messung=0;//Zwischenspeicher für Zykluszeitmessung in µs
+byte Anzahl_20ms_Takte=0;//Zwischenspeicher für 100ms und 1s Zeit Takte
 
 //Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 void Pin_Setup()
@@ -91,8 +92,27 @@ double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax)
 //Return TRUE wenn 20ms seit dem letzten Takt abgelaufen sind
 bool Zeit_Takt_20ms()
 {
-	Startzeitpunkt_Zeit_Takt_20ms=micros();
-	if (micros()>=Startzeitpunkt_Zeit_Takt_20ms+20000)
+	if (Anzahl_20ms_Takte>50)
+	{
+		Anzahl_20ms_Takte=1;
+	}
+	if (micros()>=(Startzeitpunkt_Zeit_Takt_20ms+20000))
+	{
+		Anzahl_20ms_Takte++;
+		Startzeitpunkt_Zeit_Takt_20ms=micros();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+	
+}
+//Zeit Takt alle 100ms wird aus dem 20ms Takt generiert
+//Return TRUE wenn 100ms seit dem letzten Takt abgelaufen sind
+bool Zeit_Takt_100ms()
+{
+	if (Anzahl_20ms_Takte%5==0)
 	{
 		return true;
 	}
@@ -100,8 +120,23 @@ bool Zeit_Takt_20ms()
 	{
 		return false;
 	}
-
 }
+
+//Zeit Takt alle 1s wird aus dem 20ms Takt generiert
+//Return TRUE wenn 1s seit dem letzten Takt abgelaufen sind
+bool Zeit_Takt_1s()
+{
+	if (Anzahl_20ms_Takte%50==0)
+	{
+		Anzahl_20ms_Takte=1;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 //Muss im loop() ausgeführt werden
 //Return Zykluszeit in µs

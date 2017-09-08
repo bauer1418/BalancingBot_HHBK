@@ -20,6 +20,8 @@ enum Befehle
 	cmd_Umkipperkennung_quitt,	//Umkipperkennung zurücksetzen
 	cmd_MPU_Temperatur,			//MPU Temperatur senden
 	cmd_MotorenEINAUS,			//Motoren Ein(true) oder Aus(false) schalten
+	cmd_Anzeige_Text,			//Anzuzeigender Text aus dem Arduino
+	cmd_Zyklusdaten,			//Zyklische Systemdaten für Steuerung senden
 
 };
 

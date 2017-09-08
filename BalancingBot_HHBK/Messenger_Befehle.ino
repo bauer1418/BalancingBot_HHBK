@@ -20,6 +20,7 @@ void Setup_cmdMessenger()
 	cmdMessenger.attach(cmd_Offset_Werte,Offset_Werte);
 	cmdMessenger.attach(cmd_MPU_Temperatur,MPU_Temperatur);
 	cmdMessenger.attach(cmd_MotorenEINAUS,MotorenSchalten);
+	cmdMessenger.attach(cmd_MPU_Kalibrieren,MPU_Kalibrieren);
 	cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
 }
 
@@ -27,14 +28,19 @@ void Setup_cmdMessenger()
 
 /*------------CALLBACKS---------------*/
 
-//Zyklusdaten alle 20ms senden
-
+//Zyklusdaten alle 1s senden
 void Zyklusdaten_senden()
 {
 	if (Zeit_Takt_20ms()==true)
 	{
-		cmdMessenger.sendCmdStart(cmd_Akkustand_Prozent);	//Mehrfach Senden starten
-		cmdMessenger.sendCmdArg(15.0F);						//Argument
+		cmdMessenger.sendCmdStart(cmd_Zyklusdaten);	//Mehrfach Senden starten
+		cmdMessenger.sendCmdArg(GET_KalmanWinkelX());				//Zykluszeit
+		cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);				
+		/*cmdMessenger.sendCmdArg();
+		cmdMessenger.sendCmdArg(Zykluszeit);				
+		cmdMessenger.sendCmdArg(Zykluszeit);*/				
+		cmdMessenger.sendCmdArg(MotorenEINAUS);				
+		cmdMessenger.sendCmdArg(Zykluszeit);				
 		cmdMessenger.sendCmdEnd();							//Senden beenden
 	}
 	//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
@@ -94,7 +100,21 @@ void Offset_Werte_senden(byte Befehlsnummer)
 
 void MPU_Kalibrieren()
 {
-	     
+	MotorenEINAUS=false;   
+	cmdMessenger.sendCmdStart(cmd_Anzeige_Text);
+	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("MPU Kalibrierung"));
+	//cmdMessenger.sendCmdArg(F("MPU Kalibrierung"));
+	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Bitte Sensor nicht bewegen!"));
+	//cmdMessenger.sendCmdArg(F("Bitte Sensor nicht bewegen!"));
+	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibierung startet in 5sec!"));
+	//cmdMessenger.sendCmdArg(F("Kalibierung startet in 5sec!"));
+
+	delay(5000);
+	//cmdMessenger.sendCmdArg(F("Kalibierung aktiv"));
+	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibierung aktiv"));
+	MPU6050_Kalibrieren();
+	//cmdMessenger.sendCmdEnd();
+	Offset_Werte_senden(cmd_MPU_Kalibrieren);	
 }
 
 void PID_Winkel_MinMax()

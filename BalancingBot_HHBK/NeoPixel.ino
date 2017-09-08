@@ -26,7 +26,10 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, Pin_NeopixelData, NEO_GRB + NEO_
   //colorWipe(strip.Color(0,0,0), 100); // Black
   //rainbowCycle(15);
   //colorWipe(strip.Color(0,0,0), 100); // Black
-  //colorWave(30);
+ //colorWave(30);
+
+
+
 
 //NeoPixel Setup Routine der Parameter Helligkeit steht für die Helligkeit des Pixel Rings im Bereich von 0-255 
 void NeoPixel_Setup(byte Helligkeit)

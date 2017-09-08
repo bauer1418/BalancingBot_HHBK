@@ -132,7 +132,39 @@ void Offset_gyroz(double OffsetWert)
 	offset_gyroZ= OffsetWert;
 
 }
+//MPU6050 Automatik-Kalibrierung 
+//Es werden für die 6 verschiedene Offsetwerte ein Durchschnittswert aus 100 Messwerten gebildet sollange der Sensor nicht bewegt wird.
+void MPU6050_Kalibrieren()
+{
+			double Cal_accX, Cal_accY, Cal_accZ, Cal_gyoX, Cal_gyoY, Cal_gyoZ;
+			//Kalibrierwerte auf Startwerte des MPU stellen
+			Cal_accX=accX;
+			Cal_accY=accY;
+			Cal_accZ=accZ;
+			Cal_gyoX=gyroX;
+			Cal_gyoY=gyroY;
+			Cal_gyoZ=gyroZ;
 
+			cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibrierung aktiv"));
+			for (int i = 1; i < 99; i++)
+			{
+				MPU_Zyklus();
+				Cal_accX=(Cal_accX+accX)/2;
+				Cal_accY=(Cal_accY+accY)/2;
+				Cal_accZ=(Cal_accZ+accZ)/2;
+				Cal_gyoX=(Cal_gyoX+gyroX)/2;
+				Cal_gyoY=(Cal_gyoY+gyroY)/2;
+				Cal_gyoZ=(Cal_gyoZ+gyroZ)/2;
+				delay(100);
+				cmdMessenger.sendCmd(cmd_Anzeige_Text,F("."));
+			}
+			offset_acelX=0-Cal_accX;
+			offset_acelY=0-Cal_accY;
+			offset_acelZ=16384-Cal_accZ;
+			offset_gyroX=0-Cal_gyoX;
+			offset_gyroY=0-Cal_gyoY;
+			offset_gyroZ=0-Cal_gyoZ;
+}
 
 
 
