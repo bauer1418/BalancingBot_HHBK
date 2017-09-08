@@ -101,7 +101,7 @@ void Offset_Werte_senden(byte Befehlsnummer)
 void MPU_Kalibrieren()
 {
 	MotorenEINAUS=false;   
-	cmdMessenger.sendCmdStart(cmd_Anzeige_Text);
+
 	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("MPU Kalibrierung"));
 	
 	cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Bitte Sensor nicht bewegen!"));
