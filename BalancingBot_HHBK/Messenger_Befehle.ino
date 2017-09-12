@@ -21,6 +21,9 @@ void Setup_cmdMessenger()
 	cmdMessenger.attach(cmd_MPU_Temperatur,MPU_Temperatur);
 	cmdMessenger.attach(cmd_MotorenEINAUS,MotorenSchalten);
 	cmdMessenger.attach(cmd_MPU_Kalibrieren,MPU_Kalibrieren);
+	cmdMessenger.attach(cmd_PID_Winkel_MinMax,PID_Winkel_MinMax);
+	cmdMessenger.attach(cmd_PID_Winkel_Sollwert,PID_Winkel_Sollwert);
+	cmdMessenger.attach(cmd_P_I_D_Werte,P_I_D_Werte);
 	cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
 }
 
@@ -33,14 +36,14 @@ void Zyklusdaten_senden()
 {
 	if (Zeit_Takt_20ms()==true)
 	{
-		cmdMessenger.sendCmdStart(cmd_Zyklusdaten);	//Mehrfach Senden starten
-		cmdMessenger.sendCmdArg(GET_KalmanWinkelX());				//Zykluszeit
-		cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);				
+		cmdMessenger.sendCmdStart(cmd_Zyklusdaten);			//Mehrfach Senden starten
+		cmdMessenger.sendCmdArg(GET_KalmanWinkelX());		//Aktueller KalmanWinkel senden
+		cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);		//PID Winkel Ausgangswert	
 		/*cmdMessenger.sendCmdArg();
 		cmdMessenger.sendCmdArg(Zykluszeit);				
 		cmdMessenger.sendCmdArg(Zykluszeit);*/				
-		cmdMessenger.sendCmdArg(MotorenEINAUS);				
-		cmdMessenger.sendCmdArg(Zykluszeit);				
+		cmdMessenger.sendCmdArg(MotorenEINAUS);				//Aktueller MotorEINAUS Status senden
+		cmdMessenger.sendCmdArg(Zykluszeit);				//Zykluszeit senden
 		cmdMessenger.sendCmdEnd();							//Senden beenden
 	}
 	//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
@@ -117,12 +120,20 @@ void MPU_Kalibrieren()
 
 void PID_Winkel_MinMax()
 {
-
+	double min=0, max=0;
+	min=cmdMessenger.readDoubleArg();
+	max=cmdMessenger.readDoubleArg();
+	PID_Regler_Winkel.SetOutputLimits(min, max);
+	cmdMessenger.sendCmdStart(cmd_PID_Winkel_MinMax);
+	cmdMessenger.sendCmdArg(min);
+	cmdMessenger.sendCmdArg(max);
+	cmdMessenger.sendCmdEnd();
 }
 
 void PID_Winkel_Sollwert()
 {
-
+	Sollwert_PID_Winkel=cmdMessenger.readDoubleArg();
+	cmdMessenger.sendCmd(cmd_PID_Winkel_Sollwert,Sollwert_PID_Winkel);
 }
 void MPU_Temperatur()
 {
@@ -132,4 +143,53 @@ void MotorenSchalten()
 {
 	MotorenEINAUS=cmdMessenger.readBoolArg();
 	cmdMessenger.sendCmd(cmd_MotorenEINAUS,MotorenEINAUS);
+}
+void P_I_D_Werte()
+{
+	byte Regler = cmdMessenger.readInt16Arg();//1=Winkelregler ändern 2=Speedregler ändern 3=Winkelregler senden 4=Speedregler senden
+	double P=0,I=0,D=0;
+	P=cmdMessenger.readDoubleArg();
+	I=cmdMessenger.readDoubleArg();
+	D=cmdMessenger.readDoubleArg();
+
+
+	if (Regler== 1)//Neue PID Werte für den Winkelregler festlegen und als Antwort zurücksenden
+	{
+		PID_Regler_Winkel.SetTunings(P,I,D);
+		cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
+		cmdMessenger.sendCmdArg(1);
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKi());
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());
+
+	}
+	else if (Regler== 2)//Neue PID Werte für den Geschwindigkeitsregler festlegen und als Antwort zurücksenden
+	{
+		PID_Regler_Geschwindigkeit.SetTunings(P,I,D);
+		cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
+		cmdMessenger.sendCmdArg(2);
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKp());
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKi());
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKd());
+
+	}
+		else if (Regler== 3)//Nur Anzeige der PID Werte für Winkelregler
+	{
+		cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
+		cmdMessenger.sendCmdArg(1);
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKi());
+		cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());
+
+	}
+		else if (Regler== 4)//Nur Anzeige der PID Werte für Geschwindigkeitsregler
+	{
+		cmdMessenger.sendCmdArg(2);
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKp());
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKi());
+		cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKd());
+
+	}
+
+
 }

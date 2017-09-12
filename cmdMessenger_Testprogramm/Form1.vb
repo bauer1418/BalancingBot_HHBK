@@ -23,6 +23,8 @@ Public Class Form1
         cmd_MotorenEINAUS           'Motoren Status lesen
         cmd_Anzeige_Text            'Anzuzeigender Text aus dem Arduino
         cmd_Zyklusdaten             'Zyklusdaten aus dem Arduino
+        cmd_PID_Werte               'PID Werte verstellen oder auslesen 1=Werte setzen Winkelregler 2=Werte setzen Geschwindigkeitsregler 3= Werte lesen Winkelregler 4=Werte lesen Geschwindigkeitsregler
+
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -84,8 +86,12 @@ Public Class Form1
 
     Private Sub bttBefehl_senden_Click(sender As Object, e As EventArgs) Handles bttBefehl_senden.Click
         If rbbCOMStatus.Checked = True Then
-            Dim Command = New SendCommand(cmbBefehl.SelectedIndex, txtArgument.Text)
-
+            Dim Command
+            If txtArgument.Text <> "" Then
+                Command = New SendCommand(cmbBefehl.SelectedIndex, txtArgument.Text)
+            Else
+                Command = New SendCommand(cmbBefehl.SelectedIndex)
+            End If
             Messenger.SendCommand(Command)
         Else
             MsgBox("Arduino nicht verbunden!", vbCritical, "Keine Verbindung")
@@ -103,10 +109,15 @@ Public Class Form1
         Messenger.Attach(Befehle.cmd_MPU_Kalibrieren, AddressOf Neue_Daten_Float)
         Messenger.Attach(Befehle.cmd_Offset_Werte, AddressOf Neue_Daten_Float)
         Messenger.Attach(Befehle.cmd_Zyklusdaten, AddressOf Zyklusdaten_auswerten)
+        Messenger.Attach(Befehle.cmd_PID_Winkel_MinMax, AddressOf PID_Winkel_MinMax)
+        Messenger.Attach(Befehle.cmd_PID_Winkel_Sollwert, AddressOf PID_Winkel_Sollwert)
+        Messenger.Attach(Befehle.cmd_PID_Werte, AddressOf PID_Werte)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
-
+        'lbbCOMStatus_Byte.Text = COM_Port.BytesToRead.ToString + "Byte von " + COM_Port.ReadBufferSize.ToString + "Byte"
+        'lbbCOMStatus_Prozent.Text = "Bufferauslastung: " + COM_Port.BytesToRead / COM_Port.ReadBufferSize * 100 + "%"
+        'lbbCOMStatus_Prozent.Text = TransportLayer.
     End Sub
     Private Sub NewLineSent(ByVal sender As Object, ByVal e As CommandEventArgs)
 
@@ -148,8 +159,33 @@ Public Class Form1
         Motorenstatus = arguments.ReadBoolArg()
         Zykluszeit = arguments.ReadUInt32Arg()
 
-        lbEmpfangeDaten.Items.Add("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
-        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
+        lbbZyklusdaten.Text = ("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString("00.00") + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
+
+    End Sub
+    Private Sub PID_Winkel_MinMax(ByVal arguments As ReceivedCommand)
+        'MsgBox(arguments.CmdId)
+        MsgBox("Neue PID Winkel Min,Max Werte:" + arguments.ReadDoubleArg.ToString + "," + arguments.ReadDoubleArg.ToString)
+    End Sub
+    Private Sub PID_Winkel_Sollwert(ByVal arguments As ReceivedCommand)
+        'MsgBox(arguments.CmdId)
+        MsgBox("PID-Winkel-Sollwert:" + arguments.ReadDoubleArg.ToString)
+    End Sub
+    Private Sub PID_Werte(ByVal arguments As ReceivedCommand)
+        'MsgBox(arguments.CmdId)
+        Dim Einstellung As Integer
+        Dim P, I, D As Double
+        Einstellung = arguments.ReadInt16Arg()
+        P = arguments.ReadDoubleArg()
+        I = arguments.ReadDoubleArg()
+        D = arguments.ReadDoubleArg()
+        If Einstellung = 1 Or Einstellung = 3 Then
+            MsgBox("PID-Regler Winkel Einstellungen:" + vbNewLine + "P:" + P.ToString + vbNewLine + "I:" + I.ToString + vbNewLine + "D:" + D.ToString)
+        ElseIf Einstellung = 2 Or Einstellung = 4 Then
+            MsgBox("PID-Regler Geschwindigkeit Einstellungen:" + vbNewLine + "P:" + P.ToString + vbNewLine + "I:" + I.ToString + vbNewLine + "D:" + D.ToString)
+        Else
+            MsgBox("Unbekannte Reglernummer empfangen " + Einstellung.ToString)
+        End If
+
     End Sub
 End Class
 

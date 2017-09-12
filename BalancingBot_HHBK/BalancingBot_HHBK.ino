@@ -39,6 +39,7 @@ double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Ge
 PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 
+
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 
  //the setup function runs once when you press reset or power the board
@@ -61,7 +62,10 @@ void setup()
 	{
 		Status=Setup_beendet;
 	}
-	
+	PID_Regler_Winkel.SetControllerDirection(DIRECT);
+	PID_Regler_Winkel.SetMode(AUTOMATIC);
+	PID_Regler_Winkel.SetOutputLimits(-120,120);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Sollwert_PID_Winkel=0.00;
 	Statusmeldung();
 			
 }
@@ -91,6 +95,8 @@ void loop()
 		//PID-Regler ausführen
 		PID_Regler_Winkel.Compute();
 	}
+
+	Umkippschutz(20,Eingang_PID_Winkel);
 	//Umkippschutz auswerten
 	//Motoren einstellen
 	//PID_Regler_Geschwindigkeit.Compute();

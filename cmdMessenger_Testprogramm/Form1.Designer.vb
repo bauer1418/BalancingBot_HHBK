@@ -30,6 +30,7 @@ Partial Class Form1
         Me.lbbCOMStatus = New System.Windows.Forms.Label()
         Me.rbbCOMStatus = New System.Windows.Forms.RadioButton()
         Me.lbEmpfangeDaten = New System.Windows.Forms.ListBox()
+        Me.lbbZyklusdaten = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'bttCOMVerbinden
@@ -59,7 +60,7 @@ Partial Class Form1
         '
         'bttBefehl_senden
         '
-        Me.bttBefehl_senden.Location = New System.Drawing.Point(366, 21)
+        Me.bttBefehl_senden.Location = New System.Drawing.Point(366, 12)
         Me.bttBefehl_senden.Name = "bttBefehl_senden"
         Me.bttBefehl_senden.Size = New System.Drawing.Size(118, 39)
         Me.bttBefehl_senden.TabIndex = 2
@@ -76,7 +77,7 @@ Partial Class Form1
         'lbbCOMStatus
         '
         Me.lbbCOMStatus.AutoSize = True
-        Me.lbbCOMStatus.Location = New System.Drawing.Point(9, 94)
+        Me.lbbCOMStatus.Location = New System.Drawing.Point(9, 88)
         Me.lbbCOMStatus.Name = "lbbCOMStatus"
         Me.lbbCOMStatus.Size = New System.Drawing.Size(109, 13)
         Me.lbbCOMStatus.TabIndex = 5
@@ -86,7 +87,7 @@ Partial Class Form1
         '
         Me.rbbCOMStatus.AutoSize = True
         Me.rbbCOMStatus.Enabled = False
-        Me.rbbCOMStatus.Location = New System.Drawing.Point(136, 94)
+        Me.rbbCOMStatus.Location = New System.Drawing.Point(124, 88)
         Me.rbbCOMStatus.Name = "rbbCOMStatus"
         Me.rbbCOMStatus.Size = New System.Drawing.Size(14, 13)
         Me.rbbCOMStatus.TabIndex = 6
@@ -101,11 +102,22 @@ Partial Class Form1
         Me.lbEmpfangeDaten.Size = New System.Drawing.Size(328, 56)
         Me.lbEmpfangeDaten.TabIndex = 7
         '
+        'lbbZyklusdaten
+        '
+        Me.lbbZyklusdaten.AutoSize = True
+        Me.lbbZyklusdaten.Location = New System.Drawing.Point(12, 139)
+        Me.lbbZyklusdaten.MaximumSize = New System.Drawing.Size(0, 100)
+        Me.lbbZyklusdaten.Name = "lbbZyklusdaten"
+        Me.lbbZyklusdaten.Size = New System.Drawing.Size(65, 13)
+        Me.lbbZyklusdaten.TabIndex = 8
+        Me.lbbZyklusdaten.Text = "Zyklusdaten"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(499, 143)
+        Me.ClientSize = New System.Drawing.Size(499, 161)
+        Me.Controls.Add(Me.lbbZyklusdaten)
         Me.Controls.Add(Me.lbEmpfangeDaten)
         Me.Controls.Add(Me.rbbCOMStatus)
         Me.Controls.Add(Me.lbbCOMStatus)
@@ -130,5 +142,6 @@ Partial Class Form1
     Friend WithEvents lbbCOMStatus As System.Windows.Forms.Label
     Friend WithEvents rbbCOMStatus As System.Windows.Forms.RadioButton
     Friend WithEvents lbEmpfangeDaten As System.Windows.Forms.ListBox
+    Friend WithEvents lbbZyklusdaten As System.Windows.Forms.Label
 
 End Class
