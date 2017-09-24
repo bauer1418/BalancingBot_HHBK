@@ -23,6 +23,7 @@ enum Befehle
 	cmd_Anzeige_Text,			//Anzuzeigender Text aus dem Arduino
 	cmd_Zyklusdaten,			//Zyklische Systemdaten für Steuerung senden
 	cmd_P_I_D_Werte,			//Parameter 1 steht für welchen Regler 1=Winkel PID Werte verstellen
+	
 
 };
 

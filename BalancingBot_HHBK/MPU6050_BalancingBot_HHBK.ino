@@ -146,7 +146,7 @@ void MPU6050_Kalibrieren()
 			Cal_gyoY=gyroY;
 			Cal_gyoZ=gyroZ;
 
-			//cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Kalibrierung aktiv"));
+			
 			for (int i = 1; i < 99; i++)
 			{
 				MPU_Zyklus();

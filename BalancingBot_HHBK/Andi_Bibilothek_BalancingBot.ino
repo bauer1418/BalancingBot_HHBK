@@ -13,26 +13,29 @@
 
 
 //Variablen
+const int Steps_pro_Umdrehnung=200;		//Steps pro Umdrehung der Nema17 Motoren
+const int max_Drehzahl=100;				//maximale Drehzahl der Nema17 Motoren durch Tests ermittelt
+const int DRV8825_Step_Pause=2;			//Angabe aus dem Datenblatt Seite 7 Timing Requirements 1,9µs bzw. 650ns  da Kleinstezeitverzögerung micros ist auf 2µs gestellt
 
-	//Pinnummern Übersicht
-	const int Pin_Stepmode_MS1  = 2	;		//DigitalOutput Stepmode Umschaltung 1
-	const int Pin_NeopixelData = 3;			//DigitalOutput Neopixel Daten Ausgang
-	const int Pin_Stepmode_MS2 = 4;			//DigitalOutput Stepmode Umschaltung 1
-	const int Pin_Platinenluefter = 5;		//PWMOutput Platinenlüfter Drehzahl für Transistor Q2
-	const int Pin_Gehaeuseluefter = 6;		//PWMOutput Platinenlüfter Drehzahl für Transistor Q3
-	const int Pin_DIR_Rechts = 7;			//DigitalOutput Richtungsauswahl Motor Rechts
-	const int Pin_DIR_Links = 8;			//DigitalOutput Richtungsauswahl Motor Links
-	const int Pin_Step_Rechts = 9;			//PWMOutput Step Befehl für Motor Rechts 
-	const int Pin_Step_Links = 10;			//PWMOutput Step Befehl für Motor Links
-	const int Pin_Sleep_Motortreiber = 11;	//DigitalOutput Motortreiber in den Schlafmodus versetzen 0=Schlafmodus 1=Betrieb
-	const int Pin_Reset_Motortreiber = 12;	//DigitalOutput Fehler des Mototreibers zurücksetzen 1=Aktiv
-	const int Pin_ENABLE_Motortreiber = 13;	//DigitalOutput Motortreiber Aktivieren 0=Aktiv 1=Inaktiv
-	const int Pin_FAULT_Links = 14;			//DigitalInput Fehlereingang Motortreiber Links
-	const int Pin_FAULT_Rechts =15;			//DigitalInput Fehlereingang Motortreiber Rechts
-	const int Pin_Reserve_A2 = 16;			//Analog Reserve Pin
-	const int Pin_Reserve_A3 = 17;			//Analog Reserve Pin
-	const int Pin_Akku1_Messung = 18;		//AnalogInput Spannungsmessung Akku 1
-	const int Pin_Akku2_Messung = 19;		//AnalogInput Spannungsmessung Akku 2
+//Pinnummern Übersicht
+const int Pin_Stepmode_MS1  = 2	;		//DigitalOutput Stepmode Umschaltung 1
+const int Pin_NeopixelData = 3;			//DigitalOutput Neopixel Daten Ausgang
+const int Pin_Stepmode_MS2 = 4;			//DigitalOutput Stepmode Umschaltung 1
+const int Pin_Platinenluefter = 5;		//PWMOutput Platinenlüfter Drehzahl für Transistor Q2
+const int Pin_Gehaeuseluefter = 6;		//PWMOutput Platinenlüfter Drehzahl für Transistor Q3
+const int Pin_DIR_Rechts = 7;			//DigitalOutput Richtungsauswahl Motor Rechts
+const int Pin_DIR_Links = 8;			//DigitalOutput Richtungsauswahl Motor Links
+const int Pin_Step_Rechts = 9;			//PWMOutput Step Befehl für Motor Rechts 
+const int Pin_Step_Links = 10;			//PWMOutput Step Befehl für Motor Links
+const int Pin_Sleep_Motortreiber = 11;	//DigitalOutput Motortreiber in den Schlafmodus versetzen 0=Schlafmodus 1=Betrieb
+const int Pin_Reset_Motortreiber = 12;	//DigitalOutput Fehler des Mototreibers zurücksetzen 1=Aktiv
+const int Pin_ENABLE_Motortreiber = 13;	//DigitalOutput Motortreiber Aktivieren 0=Aktiv 1=Inaktiv
+const int Pin_FAULT_Links = 14;			//DigitalInput Fehlereingang Motortreiber Links
+const int Pin_FAULT_Rechts =15;			//DigitalInput Fehlereingang Motortreiber Rechts
+const int Pin_Reserve_A2 = 16;			//Analog Reserve Pin
+const int Pin_Reserve_A3 = 17;			//Analog Reserve Pin
+const int Pin_Akku1_Messung = 18;		//AnalogInput Spannungsmessung Akku 1
+const int Pin_Akku2_Messung = 19;		//AnalogInput Spannungsmessung Akku 2
 
 
 
@@ -63,6 +66,70 @@ void Pin_Setup()
 	pinMode(Pin_FAULT_Rechts,INPUT);
 	pinMode(Pin_Akku1_Messung,INPUT);
 	pinMode(Pin_Akku2_Messung,INPUT);
+
+}
+
+//Pausenzeit berechnen aus der Drehzahl in U/min
+//Return Pausenzeit in micros
+double Pausenzeit_Rechner(double Drehzahl)
+{
+	double Steps_pro_Sekunde = Drehzahl*Steps_pro_Umdrehnung/60;
+	double Pausenzeit = 1/Steps_pro_Sekunde*1000;
+	return Pausenzeit;
+}
+
+//Versatzrechner um aus einer Drehzahl die neue Solldrehzahl zu bekommen um z.B.: ein Rad 10% schneller laufen zu Lassen für Kurvenfahrten
+//Prozent_Versatz in +/- % 
+//0% gibt Orgnialwert wieder
+//Return Drehzahl in U/min
+double Versatz_Rechner(double Drehzahl, double Prozent_Versatz)
+{
+	return Drehzahl*Prozent_Versatz/100;
+}
+//Die Steuerbefehle für die Stepper direkt in das Ausgangsregister PORTB schreiben um die Motoren zeitgleich zu steuern.
+void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
+{
+	if (MotorLinks_Step==true && MotorRechts_Step==true)
+	{
+		PORTB=PORTB|B01100000;
+		delayMicroseconds(DRV8825_Step_Pause);
+		PORTB=PORTB&B10011111;
+	}
+	else if (MotorLinks_Step==false && MotorRechts_Step==true)
+	{
+		PORTB=PORTB|B01000000;
+		delayMicroseconds(DRV8825_Step_Pause);
+		PORTB=PORTB&B10011111;
+	}
+	else if (MotorLinks_Step==true && MotorRechts_Step==false)
+	{
+		PORTB=PORTB|B00100000;
+		delayMicroseconds(DRV8825_Step_Pause);
+		PORTB=PORTB&B10011111;
+	}
+	else if (MotorLinks_Step==false && MotorRechts_Step==false)
+	{
+		PORTB=PORTB&B10011111;
+	}
+
+}
+
+//Prüfung ob bereits die Zeit für den nächsten Schritt bereit ist
+bool Step_Zeitpunkt (double Pausenzeit, double letzter_Schritt_Zeitpunkt)
+{
+	if (letzter_Schritt_Zeitpunkt+Pausenzeit<micros())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+//Fehlerauswertung
+void Fehlerauswertung()
+{
 
 }
 
