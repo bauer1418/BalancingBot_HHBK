@@ -16,6 +16,8 @@
 const int Steps_pro_Umdrehnung=200;		//Steps pro Umdrehung der Nema17 Motoren
 const int max_Drehzahl=100;				//maximale Drehzahl der Nema17 Motoren durch Tests ermittelt
 const int DRV8825_Step_Pause=2;			//Angabe aus dem Datenblatt Seite 7 Timing Requirements 1,9µs bzw. 650ns  da Kleinstezeitverzögerung micros ist auf 2µs gestellt
+unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
+unsigned long letzer_Step_Rechts=0;		//Zeitpunkt des letzten Steps für Motor Rechts
 
 //Pinnummern Übersicht
 const int Pin_Stepmode_MS1  = 2	;		//DigitalOutput Stepmode Umschaltung 1
@@ -89,25 +91,25 @@ double Versatz_Rechner(double Drehzahl, double Prozent_Versatz)
 //Die Steuerbefehle für die Stepper direkt in das Ausgangsregister PORTB schreiben um die Motoren zeitgleich zu steuern.
 void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
 {
-	if (MotorLinks_Step==true && MotorRechts_Step==true)
+	if (MotorLinks_Step==true && MotorRechts_Step==true)//beide einen Schritt
 	{
 		PORTB=PORTB|B01100000;
 		delayMicroseconds(DRV8825_Step_Pause);
 		PORTB=PORTB&B10011111;
 	}
-	else if (MotorLinks_Step==false && MotorRechts_Step==true)
+	else if (MotorLinks_Step==false && MotorRechts_Step==true)//Rechts einen Schritt
 	{
 		PORTB=PORTB|B01000000;
 		delayMicroseconds(DRV8825_Step_Pause);
 		PORTB=PORTB&B10011111;
 	}
-	else if (MotorLinks_Step==true && MotorRechts_Step==false)
+	else if (MotorLinks_Step==true && MotorRechts_Step==false)//Links einen Schritt
 	{
 		PORTB=PORTB|B00100000;
 		delayMicroseconds(DRV8825_Step_Pause);
 		PORTB=PORTB&B10011111;
 	}
-	else if (MotorLinks_Step==false && MotorRechts_Step==false)
+	else if (MotorLinks_Step==false && MotorRechts_Step==false)//beide keinen Schritt
 	{
 		PORTB=PORTB&B10011111;
 	}
@@ -125,6 +127,15 @@ bool Step_Zeitpunkt (double Pausenzeit, double letzter_Schritt_Zeitpunkt)
 	{
 		return false;
 	}
+}
+
+void Motoren_Steuerung(double Drehzahl, double Versatz_Rechts, double Versatz_Links)
+{
+	double Drehzahl_Rechts= Versatz_Rechner(Drehzahl,Versatz_Rechts);
+	double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
+	double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);
+	double Pausenzeit_Rechts=Pausenzeit_Rechner(Drehzahl_Rechts);
+	Ausgangsregister_schreiben(Step_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Step_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
 }
 
 //Fehlerauswertung

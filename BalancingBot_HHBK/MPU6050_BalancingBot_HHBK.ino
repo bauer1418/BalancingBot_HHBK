@@ -4,7 +4,7 @@
 	#include "WProgram.h"
 #endif
 
- #include <Wire.h>
+#include <Wire.h>
 #include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
 
 /* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
@@ -230,9 +230,8 @@ bool MPUsetup() {
   //compAngleY = pitch;
 
   timer = micros();
-  Fehlerspeicher=MPU_NOT_FOUND;
   Status=MPU_Setup_OK;
-
+  Statusmeldung();
   return true;
 
 }
@@ -242,7 +241,12 @@ void MPU_Zyklus()
 {
    
   /* Update all the values */
-  while (i2cRead(0x3B, i2cData, 14));
+//while(i2cRead(0x3B, i2cData, 14));
+  if (i2cRead(0x3B, i2cData, 14)!=0)
+  {
+	Fehlermeldung();
+	return;
+  }
   accX = ((i2cData[0] << 8) | i2cData[1]);
   accY = ((i2cData[2] << 8) | i2cData[3]);
   accZ = ((i2cData[4] << 8) | i2cData[5]);
@@ -377,6 +381,7 @@ uint8_t i2cWrite(uint8_t registerAddress, uint8_t data, bool sendStop) {
 }
 
 uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool sendStop) {
+  
   Wire.beginTransmission(IMUAddress);
   Wire.write(registerAddress);
   Wire.write(data, length);
@@ -392,15 +397,17 @@ uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool se
 }
 
 uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes) {
-  uint32_t timeOutTimer;
+	uint32_t timeOutTimer;
   Wire.beginTransmission(IMUAddress);
   Wire.write(registerAddress);
+  //HIER IST DER FEHLER FALLS DIE I2C VERBINDUNG ABBRICHT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   uint8_t rcode = Wire.endTransmission(false); // Don't release the bus
   if (rcode) {
 	Status=Fehler;
 	Fehlerspeicher=MPU_READ_FAILED;
-    /*Serial.print(F("i2cRead failed: "));
+	/*Serial.print(F("i2cRead failed: "));
     Serial.println(rcode);*/
+	
     return rcode; // See: http://arduino.cc/en/Reference/WireEndTransmission
   }
   Wire.requestFrom(IMUAddress, nbytes, (uint8_t)true); // Send a repeated start and then release the bus after reading
@@ -415,6 +422,7 @@ uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes) {
       else {
 		Status=Fehler;
 		Fehlerspeicher=MPU_READ_TIMEOUT;
+
         /*Serial.println(F("i2cRead timeout"));*/
         return 5; // This error value is not already taken by endTransmission
       }

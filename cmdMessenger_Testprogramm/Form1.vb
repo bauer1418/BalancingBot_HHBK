@@ -24,7 +24,6 @@ Public Class Form1
         cmd_Anzeige_Text            'Anzuzeigender Text aus dem Arduino
         cmd_Zyklusdaten             'Zyklusdaten aus dem Arduino
         cmd_PID_Werte               'PID Werte verstellen oder auslesen 1=Werte setzen Winkelregler 2=Werte setzen Geschwindigkeitsregler 3= Werte lesen Winkelregler 4=Werte lesen Geschwindigkeitsregler
-
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -154,10 +153,12 @@ Public Class Form1
         Dim Winkel, PIDOut As Double
         Dim Zykluszeit As Integer
         Dim Motorenstatus As Boolean
+        Dim Systemstatus As Integer
         Winkel = arguments.ReadFloatArg()
         PIDOut = arguments.ReadFloatArg()
         Motorenstatus = arguments.ReadBoolArg()
         Zykluszeit = arguments.ReadUInt32Arg()
+        Systemstatus = arguments.ReadInt32Arg()
 
         lbbZyklusdaten.Text = ("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString("00.00") + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
 

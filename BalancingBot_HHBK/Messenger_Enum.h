@@ -23,6 +23,10 @@ enum Befehle
 	cmd_Anzeige_Text,			//Anzuzeigender Text aus dem Arduino
 	cmd_Zyklusdaten,			//Zyklische Systemdaten für Steuerung senden
 	cmd_P_I_D_Werte,			//Parameter 1 steht für welchen Regler 1=Winkel PID Werte verstellen
+	cmd_Fahrbefehl_Vor,			//Fahrbefehl vorwärts Parameter 2 bestimmt die Geschindigkeit
+	cmd_Fahrbefehl_Zurueck,		//Fahrbefehl für Rückwärts fahren Parameter 2 bestimmt die Geschwindigkeit
+	cmd_Fahrbefehl_Kurve,		//Fahrbefehl um eine Kurve zu fahren Parameter 2 bestimmt Geschwindigkeit 3+4 sind % Angaben wie schnell die Räder links und rechts laufen sollen.
+
 	
 
 };

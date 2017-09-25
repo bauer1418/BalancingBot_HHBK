@@ -81,12 +81,18 @@ void loop()
 
 	//Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
 	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
-	/*if (Fehlerspeicher!=MPU_NOT_FOUND || Fehlerspeicher!=MPU_READ_FAILED || Fehlerspeicher!=MPU_READ_TIMEOUT || Fehlerspeicher!=MPU_Write_FAILED)
-	{*/
-
+	if (Fehlerspeicher!=MPU_NOT_FOUND && Fehlerspeicher!=MPU_READ_FAILED && Fehlerspeicher!=MPU_READ_TIMEOUT && Fehlerspeicher!=MPU_Write_FAILED)
+	{
+		/*cmdMessenger.sendCmd(99,"BLA");*/
 		MPU_Zyklus();
-		Zyklusdaten_senden();
-	/*}*/
+	}
+	//else
+	//{
+	//	cmdMessenger.sendCmd(99,"BLUB");
+	//	Fehlerspeicher=Kein_Fehler_vorhanden;
+	//}
+	Zyklusdaten_senden();
+
 	
 	if (MotorenEINAUS==true)
 	{
@@ -94,6 +100,7 @@ void loop()
 		Eingang_PID_Winkel=GET_KalmanWinkelX();
 		//PID-Regler ausführen
 		PID_Regler_Winkel.Compute();
+		Motoren_Steuerung(Ausgang_PID_Winkel,0,0);
 	}
 
 	Umkippschutz(20,Eingang_PID_Winkel);

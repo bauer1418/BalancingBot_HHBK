@@ -38,12 +38,10 @@ void Zyklusdaten_senden()
 	{
 		cmdMessenger.sendCmdStart(cmd_Zyklusdaten);			//Mehrfach Senden starten
 		cmdMessenger.sendCmdArg(GET_KalmanWinkelX());		//Aktueller KalmanWinkel senden
-		cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);		//PID Winkel Ausgangswert	
-		/*cmdMessenger.sendCmdArg();
-		cmdMessenger.sendCmdArg(Zykluszeit);				
-		cmdMessenger.sendCmdArg(Zykluszeit);*/				
+		cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);		//PID Winkel Ausgangswert				
 		cmdMessenger.sendCmdArg(MotorenEINAUS);				//Aktueller MotorEINAUS Status senden
 		cmdMessenger.sendCmdArg(Zykluszeit);				//Zykluszeit senden
+		cmdMessenger.sendCmdArg(Status);					//Aktuellen Systemstatus senden
 		cmdMessenger.sendCmdEnd();							//Senden beenden
 	}
 	//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
@@ -115,7 +113,8 @@ void MPU_Kalibrieren()
 	
 	MPU6050_Kalibrieren();
 	
-	Offset_Werte_senden(cmd_MPU_Kalibrieren);	
+	Offset_Werte_senden(cmd_MPU_Kalibrieren);
+
 }
 
 void PID_Winkel_MinMax()
