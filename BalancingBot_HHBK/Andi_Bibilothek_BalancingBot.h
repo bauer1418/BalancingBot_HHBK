@@ -18,6 +18,8 @@ const int max_Drehzahl=100;				//maximale Drehzahl der Nema17 Motoren durch Test
 const int DRV8825_Step_Pause=2;			//Angabe aus dem Datenblatt Seite 7 Timing Requirements 1,9µs bzw. 650ns  da Kleinstezeitverzögerung micros ist auf 2µs gestellt
 unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
 unsigned long letzer_Step_Rechts=0;		//Zeitpunkt des letzten Steps für Motor Rechts
+int LuefterPlatineDrehzahl=0;			//Lüfterdrehzahl in % für Platine
+int LuefterGehaeuseDrehzahl=0;			//Lüfterdrehzahl in % für Gehäuse
 
 //Pinnummern Übersicht
 const int Pin_Stepmode_MS1  = 2	;		//DigitalOutput Stepmode Umschaltung 1
@@ -47,6 +49,8 @@ unsigned long  Startzeitpunkt_Zeit_Takt_20ms=0;//Zeitpunkt der letzen Ausführung
 unsigned long  Startzeitpunkt_Zykluszeit_Messung=0;//Zwischenspeicher für Zykluszeitmessung in µs
 byte Anzahl_20ms_Takte=0;//Zwischenspeicher für 100ms und 1s Zeit Takte
 
+
+
 //Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 void Pin_Setup()
 {
@@ -70,6 +74,27 @@ void Pin_Setup()
 	pinMode(Pin_Akku2_Messung,INPUT);
 
 }
+
+void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin)
+{
+	if (Temperatur>=40.0)
+	{
+		analogWrite(Luefter_Pin,255);//100%
+	}
+	else if (Temperatur>=35.0)
+	{
+		analogWrite(Luefter_Pin,204);//80%
+	}
+		else if (Temperatur>=30.0)
+	{
+		analogWrite(Luefter_Pin,153);//60%
+	}
+		else
+	{
+		analogWrite(Luefter_Pin,128);//50%
+	}
+}
+
 
 //Pausenzeit berechnen aus der Drehzahl in U/min
 //Return Pausenzeit in micros
@@ -121,11 +146,11 @@ bool Step_Zeitpunkt (double Pausenzeit, double letzter_Schritt_Zeitpunkt)
 {
 	if (letzter_Schritt_Zeitpunkt+Pausenzeit<micros())
 	{
-		return true;
+		return true;//Zeit für nächsten Step erreicht
 	}
 	else
 	{
-		return false;
+		return false;//Zeit noch nicht erreicht
 	}
 }
 

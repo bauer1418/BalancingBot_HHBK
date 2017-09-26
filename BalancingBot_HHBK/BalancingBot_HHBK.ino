@@ -10,7 +10,7 @@
 #include <EEPROMex.h>
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
-
+#include "Andi_Bibilothek_BalancingBot.h"
 #include <PID_v1_Andi.h>
 #include "Messenger_Enum.h"
 
@@ -36,6 +36,7 @@ bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter
 double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
 double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
 
+
 PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 
@@ -45,18 +46,17 @@ CmdMessenger cmdMessenger = CmdMessenger(Serial);
  //the setup function runs once when you press reset or power the board
 void setup() 
 {
-	NeoPixel_Setup(25);
+	Pin_Setup();
+
+	analogWrite(Pin_Platinenluefter,207);//Platinenlüfter auf 80% stellen
 
 	Setup_cmdMessenger();
-	
-	Serial.begin(115200);
-	
-	Pin_Setup();
-	
+
+	NeoPixel_Setup(25);
+
 	if (MPUsetup==false)
 	{
 		Status=Fehler;
-		Fehlerspeicher=8;
 	}
 	else
 	{
@@ -67,7 +67,6 @@ void setup()
 	PID_Regler_Winkel.SetOutputLimits(-120,120);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Sollwert_PID_Winkel=0.00;
 	Statusmeldung();
-			
 }
 
 
@@ -104,10 +103,10 @@ void loop()
 	}
 
 	Umkippschutz(20,Eingang_PID_Winkel);
-	//Umkippschutz auswerten
 	//Motoren einstellen
 	//PID_Regler_Geschwindigkeit.Compute();
-	
+	Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
+	Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehäuselüftersteuerung
 
 	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }
@@ -139,10 +138,15 @@ bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
 	}
    else if (Akkuspannung1 <  AkkuSpannungNiedrig || Akkuspannung2 < AkkuSpannungNiedrig)
 	{
+		Status=Akkustand_niedrig;
 		return false;
 	}
 	else
 	{
+		if (Status==AkkuSpannungNiedrig||Status==AkkuSpannungKritisch)
+		{
+			Status=System_Bereit;
+		}
 		return true;
 	}
 }

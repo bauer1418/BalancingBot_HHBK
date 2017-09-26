@@ -15,20 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BalancingBot_HHBK.ino" />
     <None Include="Messenger_Befehle.ino" />
     <None Include="MPU6050_BalancingBot_HHBK.ino" />
     <None Include="NeoPixel.ino" />
-    <None Include="Andi_Bibilothek_BalancingBot.ino" />
+    <None Include="BalancingBot_HHBK.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.BalancingBot_HHBK.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Andi_Bibilothek_BalancingBot.h">
+    <ClInclude Include="Messenger_Enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Messenger_Enum.h">
+    <ClInclude Include="Andi_Bibilothek_BalancingBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
