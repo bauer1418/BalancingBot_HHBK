@@ -12,23 +12,7 @@
 #include <CmdMessenger.h>
 #include "Andi_Bibilothek_BalancingBot.h"
 #include <PID_v1_Andi.h>
-#include "Messenger_Enum.h"
 
-
-byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
-byte Fehlerspeicher=0;
-	
-double Akkuspannung1 = 0.00;			//Akkuspannung 1 aus der Akkuüberwachung
-double Akkuspannung2 = 0.00;			//Akkuspannung 2 aus der Akkuüberwachung
-double AkkuSpannungMin = 6.00;			//AkkuEntladespannung 0%
-double AkkuSpannungKritisch = 6.24;		//Akkuspannung 10%
-double AkkuSpannungNiedrig = 6.60;		//Akkuspannung 25%
-double AkkuSpannungMax = 8.40;			//Akkuspannung bei Vollgeladenem Akku 100%
-byte Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
-double AkkuSpannungGesamt = 0.0;		//Akkuspannung beide Packs
-double Akku_Messbereich = 0.00;			//Messbereich für die Akkuspannung
-const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen in Ohm
-const int SpannungsmessungR2 = 3900;	//Messwiderstand für Akkumessungen in Ohm
 unsigned long Zykluszeit=0;				//akutelle Zykluszeit
 bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
 
@@ -82,17 +66,14 @@ void loop()
 	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
 	if (Fehlerspeicher!=MPU_NOT_FOUND && Fehlerspeicher!=MPU_READ_FAILED && Fehlerspeicher!=MPU_READ_TIMEOUT && Fehlerspeicher!=MPU_Write_FAILED)
 	{
-		/*cmdMessenger.sendCmd(99,"BLA");*/
 		MPU_Zyklus();
 	}
 	//else
 	//{
-	//	cmdMessenger.sendCmd(99,"BLUB");
 	//	Fehlerspeicher=Kein_Fehler_vorhanden;
 	//}
 	Zyklusdaten_senden();
 
-	
 	if (MotorenEINAUS==true)
 	{
 		//Winkel auslesen
@@ -110,44 +91,3 @@ void loop()
 
 	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }
-
-
-
-//Akkumessungen auswerten und in den Variablen die entsprechende Werte eintragen
-//Return TRUE Akkustatus in Ordnung FALSE Akkustatus niedrig oder kristisch
-bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
-{
-	if (Akku_Messbereich==0.00)
-	{
-		Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
-	}
-
-	//Akkumessung für akku 2 Akku GND auf A6
-	//Akkumessung für akku 1 Akkugesammnt GND auf A7
-	Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
-	AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
-	Akkuspannung1 = AkkuSpannungGesamt-Akkuspannung2;
-	Akku_Prozent = (((Akkuspannung1-AkkuSpannungMin)/Akku_Messbereich*100)+((Akkuspannung2-AkkuSpannungMin)/Akku_Messbereich*100)/2);
-
-
-	if ((Akkuspannung1 <=  AkkuSpannungKritisch || Akkuspannung2 <= AkkuSpannungKritisch))
-	{
-		Status= Akku_kritisch;
-		return false;
-
-	}
-   else if (Akkuspannung1 <  AkkuSpannungNiedrig || Akkuspannung2 < AkkuSpannungNiedrig)
-	{
-		Status=Akkustand_niedrig;
-		return false;
-	}
-	else
-	{
-		if (Status==AkkuSpannungNiedrig||Status==AkkuSpannungKritisch)
-		{
-			Status=System_Bereit;
-		}
-		return true;
-	}
-}
-

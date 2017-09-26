@@ -9,17 +9,38 @@
 	#else
 		#include "WProgram.h"
 	#endif
+#include "Messenger_Enum.h"
 
 
 
 //Variablen
+//Fehler und Statusüberwachung
+byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
+byte Fehlerspeicher=0;					//Fehlerstatus Bedeutung siehe Enum Fehlermeldungen
+
+//Motoren
 const int Steps_pro_Umdrehnung=200;		//Steps pro Umdrehung der Nema17 Motoren
 const int max_Drehzahl=100;				//maximale Drehzahl der Nema17 Motoren durch Tests ermittelt
 const int DRV8825_Step_Pause=2;			//Angabe aus dem Datenblatt Seite 7 Timing Requirements 1,9µs bzw. 650ns  da Kleinstezeitverzögerung micros ist auf 2µs gestellt
 unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
 unsigned long letzer_Step_Rechts=0;		//Zeitpunkt des letzten Steps für Motor Rechts
+
+//Lüfter
 int LuefterPlatineDrehzahl=0;			//Lüfterdrehzahl in % für Platine
 int LuefterGehaeuseDrehzahl=0;			//Lüfterdrehzahl in % für Gehäuse
+
+//Akkumessungen
+double Akkuspannung1 = 0.00;			//Akkuspannung 1 aus der Akkuüberwachung
+double Akkuspannung2 = 0.00;			//Akkuspannung 2 aus der Akkuüberwachung
+double AkkuSpannungMin = 6.00;			//AkkuEntladespannung 0%
+double AkkuSpannungKritisch = 6.24;		//Akkuspannung 10%
+double AkkuSpannungNiedrig = 6.60;		//Akkuspannung 25%
+double AkkuSpannungMax = 8.40;			//Akkuspannung bei Vollgeladenem Akku 100%
+byte Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
+double AkkuSpannungGesamt = 0.0;		//Akkuspannung beide Packs
+double Akku_Messbereich = 0.00;			//Messbereich für die Akkuspannung
+const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen in Ohm
+const int SpannungsmessungR2 = 3900;	//Messwiderstand für Akkumessungen in Ohm
 
 //Pinnummern Übersicht
 const int Pin_Stepmode_MS1  = 2	;		//DigitalOutput Stepmode Umschaltung 1
@@ -181,8 +202,6 @@ double Spannungsteiler (double R1, double R2, int AnalogEingangsPin)
 	return Spannung;
 }
 
-
-
 //Spannungsbereich für die Akkumessungen berechnen Beispiel 8,4V-6V=2,4V
 double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax)
 {
@@ -190,6 +209,46 @@ double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax)
 	Messbereich= AkkuMax-AkkuMin;
 	return Messbereich;
 }
+
+//Akkumessungen auswerten und in den Variablen die entsprechende Werte eintragen
+//Return TRUE Akkustatus in Ordnung FALSE Akkustatus niedrig oder kristisch
+bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
+{
+	if (Akku_Messbereich==0.00)
+	{
+		Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
+	}
+
+	//Akkumessung für akku 2 Akku GND auf A6
+	//Akkumessung für akku 1 Akkugesammnt GND auf A7
+	Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
+	AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
+	Akkuspannung1 = AkkuSpannungGesamt-Akkuspannung2;
+	Akku_Prozent = (((Akkuspannung1-AkkuSpannungMin)/Akku_Messbereich*100)+((Akkuspannung2-AkkuSpannungMin)/Akku_Messbereich*100)/2);
+
+
+	if ((Akkuspannung1 <=  AkkuSpannungKritisch || Akkuspannung2 <= AkkuSpannungKritisch))
+	{
+		Status= Akku_kritisch;
+		return false;
+
+	}
+   else if (Akkuspannung1 <  AkkuSpannungNiedrig || Akkuspannung2 < AkkuSpannungNiedrig)
+	{
+		Status=Akkustand_niedrig;
+		return false;
+	}
+	else
+	{
+		if (Status==AkkuSpannungNiedrig||Status==AkkuSpannungKritisch)
+		{
+			Status=System_Bereit;
+		}
+		return true;
+	}
+}
+
+
 
 //Zeitmessung für 20ms Takt
 //Return TRUE wenn 20ms seit dem letzten Takt abgelaufen sind
