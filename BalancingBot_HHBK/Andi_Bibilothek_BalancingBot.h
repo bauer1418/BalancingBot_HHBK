@@ -75,7 +75,6 @@ byte Anzahl_20ms_Takte=0;//Zwischenspeicher für 100ms und 1s Zeit Takte
 //Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 void Pin_Setup()
 {
-	
 	//PinMode für alle Pins setzen
 	pinMode(Pin_Stepmode_MS1,OUTPUT);
 	pinMode(Pin_NeopixelData,OUTPUT);
@@ -93,9 +92,9 @@ void Pin_Setup()
 	pinMode(Pin_FAULT_Rechts,INPUT);
 	pinMode(Pin_Akku1_Messung,INPUT);
 	pinMode(Pin_Akku2_Messung,INPUT);
-
 }
 
+//Lüftersteuerung über eine Temperatur mit Schreiben des analogen PWM Ausgangs
 void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin)
 {
 	if (Temperatur>=40.0)
@@ -115,7 +114,6 @@ void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin)
 		analogWrite(Luefter_Pin,128);//50%
 	}
 }
-
 
 //Pausenzeit berechnen aus der Drehzahl in U/min
 //Return Pausenzeit in micros
@@ -162,12 +160,13 @@ void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
 
 }
 
-//Prüfung ob bereits die Zeit für den nächsten Schritt bereit ist
-bool Step_Zeitpunkt (double Pausenzeit, double letzter_Schritt_Zeitpunkt)
+//Zeitüberprüfung ob bereits die angegebende Pausenzeit abgelaufen ist
+//Zeiten in micros
+bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt)
 {
-	if (letzter_Schritt_Zeitpunkt+Pausenzeit<micros())
+	if (letzter_Schaltzeitpunkt+Pausenzeit<micros())
 	{
-		return true;//Zeit für nächsten Step erreicht
+		return true;//Zeit erreicht
 	}
 	else
 	{
@@ -181,7 +180,7 @@ void Motoren_Steuerung(double Drehzahl, double Versatz_Rechts, double Versatz_Li
 	double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
 	double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);
 	double Pausenzeit_Rechts=Pausenzeit_Rechner(Drehzahl_Rechts);
-	Ausgangsregister_schreiben(Step_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Step_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
+	Ausgangsregister_schreiben(Schalt_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Schalt_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
 }
 
 //Fehlerauswertung

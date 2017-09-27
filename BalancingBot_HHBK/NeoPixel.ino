@@ -13,7 +13,8 @@
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, Pin_NeopixelData, NEO_GRB + NEO_KHZ800);
-
+long letzter_NeoPixel_Wechsel=0;
+unsigned int aktueller_Pixel=0;
 
   //// Some example procedures showing how to display to the pixels:
   //colorWipe(strip.Color(0,0,0), 25); // Black
@@ -35,20 +36,71 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, Pin_NeopixelData, NEO_GRB + NEO_
 void NeoPixel_Setup(byte Helligkeit)
 {
 	strip.begin();
-	strip.setBrightness(Helligkeit);  // Lower brightness and save eyeballs!
-	strip.show(); // Initialize all pixels to 'off'
+	strip.setBrightness(Helligkeit);	 //Achtung 100% Helligkeit = Augentod
+	strip.show();						// Alle Pixel auf aus stellen
 }
 
+//Haupt Neopixel Steuerung
+//Wenn System gestört ist blinken oder im normal Fahrbetrieb Akkustand anzeigen
+void NeoPixel_Steuerung(int Systemstatus, bool Motorenstatus)
+{
+	if (Systemstatus==Fehler)
+	{
 
+	}
+	else if (Motorenstatus==true)
+	{
 
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-      strip.show();
-      delay(wait);
-  }
+	}
+	else
+	{
+
+	}
 }
+
+//Akkustand anzeigen im Fahrbetrieb
+void NeoPixel_Akkustand(int AkkuProzent)
+{
+	NeoPixel_alle_Pixel_eine_Farbe(200,Farbwert_berechnen(Akku_Prozent*-1+100),0,Farbwert_berechnen(Akku_Prozent));
+}
+
+//Farbwert berechnen aus einem Prozentwert und des maximal Wertes der analog Ausgänge 255
+int Farbwert_berechnen(double Prozentwert)
+{
+	int Ergebnis = 255*Prozentwert/100;
+	return Ergebnis;
+}
+
+//Neopixelring auf eine Farbe stellen mit einer Wartezeit zwischen dem einzelem Setzen in ms
+//Es sind nur abstüfungen von minimal 20ms möglich da Zugriff auf 20ms_Takt
+bool NeoPixel_alle_Pixel_eine_Farbe(int Wartezeit, int FarbeR, int FarbeG, int FarbeB)
+{
+	if (Schalt_Zeitpunkt(Wartezeit,letzter_NeoPixel_Wechsel))
+	{
+		strip.setPixelColor(aktueller_Pixel,strip.Color(FarbeR,FarbeG,FarbeB));//setzt das aktuelle Pixel auf die gewünschte Farbe
+		if (aktueller_Pixel<16)
+		{
+			aktueller_Pixel=aktueller_Pixel+1;
+			letzter_NeoPixel_Wechsel=micros();//Zeit erreicht
+		}
+		else
+		{
+			aktueller_Pixel=0;
+			letzter_NeoPixel_Wechsel=micros();//Zeit erreicht
+			return true;
+		}
+	}
+	return false;
+}
+
+//Neopixelring in Startstellung bringen und alle Zähler zurücksetzten
+void NeoPixel_Grundstellung()
+{
+	aktueller_Pixel=0;					//StartPixel auswählen
+	letzter_NeoPixel_Wechsel=micros();	//Zeitpunkt auf jetzt stellen
+	strip.show();						// Alle Pixel auf aus stellen
+}
+
 
 void rainbow(uint8_t wait) {
   uint16_t i, j;
