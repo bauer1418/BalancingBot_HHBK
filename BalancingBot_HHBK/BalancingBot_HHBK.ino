@@ -24,6 +24,8 @@ double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Ge
 PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 
+Stepper_Motor Motor_Links(false,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+Stepper_Motor Motor_Rechts(true,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 
@@ -59,9 +61,7 @@ void loop()
 {
 	Zykluszeit = Zykluszeit_Messung();
 	Zeit_Takt_20ms();
-
-
-
+	
 	//Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
 	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
 	if (Fehlerspeicher!=MPU_NOT_FOUND && Fehlerspeicher!=MPU_READ_FAILED && Fehlerspeicher!=MPU_READ_TIMEOUT && Fehlerspeicher!=MPU_Write_FAILED)
@@ -79,12 +79,12 @@ void loop()
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelX();
 		//PID-Regler ausführen
-		PID_Regler_Winkel.Compute();
+		PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
 		Motoren_Steuerung(Ausgang_PID_Winkel,0,0);
 	}
 
-	Umkippschutz(20,Eingang_PID_Winkel);
-	//Motoren einstellen
+	Umkippschutz(20,GET_KalmanWinkelX());
+
 	//PID_Regler_Geschwindigkeit.Compute();
 	Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
 	Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehäuselüftersteuerung

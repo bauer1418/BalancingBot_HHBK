@@ -59,7 +59,7 @@ Public Class Form1
 
         Try
             If rbbCOMStatus.Checked = False Then
-                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 115200, .DtrEnable = False}}
+                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 57600, .DtrEnable = False}}
 
 
 

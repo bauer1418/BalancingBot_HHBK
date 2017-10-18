@@ -15,6 +15,7 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, Pin_NeopixelData, NEO_GRB + NEO_KHZ800);
 long letzter_NeoPixel_Wechsel=0;
 unsigned int aktueller_Pixel=0;
+bool Fehler_LED_AN=false;
 
   //// Some example procedures showing how to display to the pixels:
   //colorWipe(strip.Color(0,0,0), 25); // Black
@@ -46,7 +47,7 @@ void NeoPixel_Steuerung(int Systemstatus, bool Motorenstatus)
 {
 	if (Systemstatus==Fehler)
 	{
-
+		
 	}
 	else if (Motorenstatus==true)
 	{

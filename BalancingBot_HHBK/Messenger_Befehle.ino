@@ -11,7 +11,7 @@
 //Setup Routine für die Serielle Komunikation mit dem cmdMessenger Library Arduino<->Steuerungssoftware
 void Setup_cmdMessenger()
 {
-	Serial.begin(115200);
+	Serial.begin(57600);
 	//Funktionsaufruf bei cmd_Signal
 	cmdMessenger.attach(cmd_Statusmeldung,Statusmeldung);
 	cmdMessenger.attach(cmd_Fehlermeldung,Fehlermeldung);
@@ -32,7 +32,7 @@ void Setup_cmdMessenger()
 
 /*------------CALLBACKS---------------*/
 
-//Zyklusdaten alle 1s senden
+//Zyklusdaten alle 20ms senden
 void Zyklusdaten_senden()
 {
 	if (Zeit_Takt_20ms()==true)
