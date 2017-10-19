@@ -18,18 +18,10 @@
 byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
 byte Fehlerspeicher=0;					//Fehlerstatus Bedeutung siehe Enum Fehlermeldungen
 
-//Motoren
-const int Steps_pro_Umdrehnung=200;		//Steps pro Umdrehung der Nema17 Motoren
-const int max_Drehzahl=100;				//maximale Drehzahl der Nema17 Motoren durch Tests ermittelt
-const int DRV8825_Step_Pause=2;			//Angabe aus dem Datenblatt Seite 7 Timing Requirements 1,9µs bzw. 650ns  da Kleinstezeitverzögerung micros ist auf 2µs gestellt
 unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
 unsigned long letzer_Step_Rechts=0;		//Zeitpunkt des letzten Steps für Motor Rechts
 
-enum Richtungen
-{
-	Vorwaerts,							//Motorrichtung Vorwaerts
-	Rueckwaerts							//Motorrichtung Rückwärts
-};
+
 
 
 //Lüfter
@@ -43,7 +35,7 @@ double AkkuSpannungMin = 6.00;			//AkkuEntladespannung 0%
 double AkkuSpannungKritisch = 6.24;		//Akkuspannung 10%
 double AkkuSpannungNiedrig = 6.60;		//Akkuspannung 25%
 double AkkuSpannungMax = 8.40;			//Akkuspannung bei Vollgeladenem Akku 100%
-byte Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
+double Akku_Prozent = 0;					//Akkustand in Prozent gemittelt über beide Packs
 double AkkuSpannungGesamt = 0.0;		//Akkuspannung beide Packs
 double Akku_Messbereich = 0.00;			//Messbereich für die Akkuspannung
 const int SpannungsmessungR1 = 22000;	//Vorwiderstand für Akkumessungen in Ohm
@@ -77,6 +69,8 @@ unsigned long  Startzeitpunkt_Zeit_Takt_20ms=0;//Zeitpunkt der letzen Ausführung
 unsigned long  Startzeitpunkt_Zykluszeit_Messung=0;//Zwischenspeicher für Zykluszeitmessung in µs
 byte Anzahl_20ms_Takte=0;//Zwischenspeicher für 100ms und 1s Zeit Takte
 
+Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 
 
 //Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
@@ -89,120 +83,24 @@ void Pin_Setup()
 	pinMode(Pin_Akku1_Messung,INPUT);
 	pinMode(Pin_Akku2_Messung,INPUT);
 }
-
-class Stepper_Motor
+//Zeitüberprüfung ob bereits die angegebende Pausenzeit abgelaufen ist
+//Zeiten in micros
+bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt)
 {
-public:
-	Stepper_Motor(bool Invertiert, int PIN_Step,int PIN_Fehler, int PIN_Richtung,int PIN_Sleep,int PIN_Reset,int PIN_Stepmode_MS1,int PIN_Stepmode_MS2,int PIN_Enable);
-	void Aktiv_Schalten(bool Schaltbefehl);//Schaltbefehl true = aktiv schalten
-	int Status(void);
-	enum Motortreiber_Status{Aktiv, Deaktiv, Fehler};
-	void Fehler_quittieren(void);//Motortreiber zurücksetzen
-	void StepMode_setzen(int StepMode);
-	enum StepModes{Vollschritt, Halbschritt, Viertelschritt, Achtelschritt};
-	bool Step (double Drehzahl, double Versatz);
-
-private:
-	int Private_PIN_Step, Private_PIN_Fehler, Private_PIN_Richtung, Private_PIN_Sleep, Private_PIN_Reset, Private_PIN_Stepmode_MS1, Private_PIN_Stepmode_MS2, Private_PIN_Enable;
-	bool Private_Invertiert;//wenn false keine Änderng wenn true Wirkung umkehren
-	bool Private_Motor_aktiv;//Motor aktiv (true)oder deaktiv(false) 
-	double Private_Drehzahl;//Pausenzeit bis zum nächsten Step bei aktueller Drehzahl
-	double Private_Pausenzeit;//Pausenzeit bis zum nächsten Step bei aktueller Drehzahl
-};
-
-Stepper_Motor::Stepper_Motor(bool Invertiert, int PIN_Step,int PIN_Fehler, int PIN_Richtung,int PIN_Sleep,int PIN_Reset,int PIN_Stepmode_MS1,int PIN_Stepmode_MS2,int PIN_Enable)
-{
-	//Übertragung der Parameter in Private Variablen
-	Private_Invertiert=Invertiert;
-	Private_PIN_Step=PIN_Step;
-	Private_PIN_Fehler=PIN_Fehler;
-	Private_PIN_Richtung=PIN_Richtung;
-	Private_PIN_Sleep=PIN_Sleep; 
-	Private_PIN_Reset=PIN_Reset;
-	Private_PIN_Stepmode_MS1=PIN_Stepmode_MS1;
-	Private_PIN_Stepmode_MS2=PIN_Stepmode_MS2;
-	Private_PIN_Enable=PIN_Enable;
-
-	//PIN-Setup
-	pinMode(Private_PIN_Richtung,OUTPUT);
-	pinMode(Private_PIN_Step,OUTPUT);
-	pinMode(Private_PIN_Sleep,OUTPUT);
-	pinMode(Private_PIN_Reset,OUTPUT);
-	pinMode(Private_PIN_Enable,OUTPUT);
-	pinMode(Private_PIN_Fehler,INPUT);
-	pinMode(Private_PIN_Stepmode_MS1,OUTPUT);
-	pinMode(Private_PIN_Stepmode_MS2,OUTPUT);
-
-	//Motortreiber starten , muss aber nochmal mit Aktivschalten aktiviert werden!
-	digitalWrite(Private_PIN_Reset,true);
-	digitalWrite(Private_PIN_Sleep,true);
-
-}
-void Stepper_Motor::Aktiv_Schalten(bool Schaltbefehl)
-{
-	Private_Motor_aktiv=Schaltbefehl;
-	if (Private_Motor_aktiv==true)
+	if (letzter_Schaltzeitpunkt+Pausenzeit<micros())
 	{
-		digitalWrite(Private_PIN_Enable,false);
+		return true;//Zeit erreicht
 	}
 	else
 	{
-		digitalWrite(Private_PIN_Enable,true);
+		return false;//Zeit noch nicht erreicht
 	}
 }
-int Stepper_Motor::Status(void)
-{
-	if (digitalRead(Private_PIN_Fehler)==true)
-	{
-		return Fehler;
-	}
-	else if (Private_Motor_aktiv==true)
-	{
-		return Aktiv;
-	}
-	else
-	{
-		return Deaktiv;
-	}
-}
-void Stepper_Motor::Fehler_quittieren(void)
-{
-	digitalWrite(Private_PIN_Reset,false);
-	delay(5);
-	digitalWrite(Private_PIN_Reset,true);
-}
-void Stepper_Motor::StepMode_setzen(int StepMode)
-{
-	if (StepMode==Vollschritt)
-	{
-		digitalWrite(Private_PIN_Stepmode_MS1,false);
-		digitalWrite(Private_PIN_Stepmode_MS2,false);
-	}
-	else if (StepMode==Halbschritt)
-	{
-		digitalWrite(Private_PIN_Stepmode_MS1,true);
-		digitalWrite(Private_PIN_Stepmode_MS2,false);
-	}
-	else if (StepMode==Viertelschritt)
-	{
-		digitalWrite(Private_PIN_Stepmode_MS1,false);
-		digitalWrite(Private_PIN_Stepmode_MS2,true);
-	}
-	else if (StepMode==Achtelschritt)
-	{
-		digitalWrite(Private_PIN_Stepmode_MS1,true);
-		digitalWrite(Private_PIN_Stepmode_MS2,true);
-	}
-}
-bool Stepper_Motor::Step (double Drehzahl, double Versatz)
-{
-	Private_Drehzahl=Versatz_Rechner(Drehzahl,Versatz);
-	Private_Pausenzeit=Pausenzeit_Rechner(Private_Drehzahl);
-}
+
+
 void test()
 {
-	Stepper_Motor MotorTEST(false,1,2,3,4,5,6,7,8);
-	
+
 }
 
 
@@ -229,47 +127,6 @@ void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin)
 	}
 }
 
-//Pausenzeit berechnen aus der Drehzahl in U/min
-//Return Pausenzeit in micros
-double Pausenzeit_Rechner(double Drehzahl)
-{
-	double Steps_pro_Sekunde = Drehzahl*Steps_pro_Umdrehnung/60;
-	double Pausenzeit = 1/Steps_pro_Sekunde*1000;
-	return Pausenzeit;
-}
-
-//Versatzrechner um aus einer Drehzahl die neue Solldrehzahl zu bekommen um z.B.: ein Rad 10% schneller laufen zu Lassen für Kurvenfahrten
-//Prozent_Versatz in +/- % 
-//0% gibt Orgnialwert wieder
-//Return Drehzahl in U/min
-double Versatz_Rechner(double Drehzahl, double Prozent_Versatz)
-{
-	return Drehzahl*Prozent_Versatz/100;
-}
-
-void Motoren_Steuerung(double Drehzahl, double Versatz_Rechts, double Versatz_Links)
-{
-	//double Drehzahl_Rechts= Versatz_Rechner(Drehzahl,Versatz_Rechts);
-	//double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
-	//double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);
-	//double Pausenzeit_Rechts=Pausenzeit_Rechner(Drehzahl_Rechts);
-	//Ausgangsregister_schreiben(Schalt_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Schalt_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
-	Ausgangsregister_schreiben();
-}
-//Zeitüberprüfung ob bereits die angegebende Pausenzeit abgelaufen ist
-//Zeiten in micros
-bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt)
-{
-	if (letzter_Schaltzeitpunkt+Pausenzeit<micros())
-	{
-		return true;//Zeit erreicht
-	}
-	else
-	{
-		return false;//Zeit noch nicht erreicht
-	}
-}
-
 //Die Steuerbefehle für die Stepper direkt in das Ausgangsregister PORTB schreiben um die Motoren zeitgleich zu steuern.
 void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
 {
@@ -283,13 +140,17 @@ void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
 	{
 		PORTB=PORTB|B01000000;
 		delayMicroseconds(DRV8825_Step_Pause);
-		PORTB=PORTB&B10011111;
+		PORTB=PORTB&B10111111;
 	}
 	else if (MotorLinks_Step==true && MotorRechts_Step==false)//Links einen Schritt
 	{
-		PORTB=PORTB|B00100000;
+		/*PORTB=PORTB|B00100000;
 		delayMicroseconds(DRV8825_Step_Pause);
-		PORTB=PORTB&B10011111;
+		PORTB=PORTB&B11011111;*/
+		digitalWrite(Pin_Step_Links,true);
+		delayMicroseconds(2500);
+		digitalWrite(Pin_Step_Links,false);
+
 	}
 	else if (MotorLinks_Step==false && MotorRechts_Step==false)//beide keinen Schritt
 	{
@@ -299,7 +160,19 @@ void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step)
 }
 
 
+//Unterprogramm zur Motorensteuerung
+//Drehzahl ist benötigte Drehzahl für Balancing
+//Prozent_Rechts/Links entspricht dem Sollwert für den jewaligen Motor in Prozent 100% => Sollwert==Motorwert
+void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links)
+{
+	Ausgangsregister_schreiben(Motor_Links.Step(Drehzahl,Prozent_Links),Motor_Rechts.Step(Drehzahl,Prozent_Rechts));
+	//double Drehzahl_Rechts= Versatz_Rechner(Drehzahl,Versatz_Rechts);
+	//double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
+	//double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);
+	//double Pausenzeit_Rechts=Pausenzeit_Rechner(Drehzahl_Rechts);
+	//Ausgangsregister_schreiben(Schalt_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Schalt_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
 
+}
 
 //Fehlerauswertung
 void Fehlerauswertung()
@@ -311,12 +184,19 @@ void Fehlerauswertung()
 double Spannungsteiler (double R1, double R2, int AnalogEingangsPin)
 	
 {
-	double Strom=0.00;
-	double Spannung=-70.00;
+	//double Strom=0.00;
+	//double Spannung=-70.00;
+	//pinMode(AnalogEingangsPin, INPUT);
+	//Strom=(analogRead(AnalogEingangsPin)*5.00/1024.00)/R1;
+	//Spannung=(R1+R2)*Strom;
+	//return Spannung;
+	double Teiler=R2/(R1+R2);
 	pinMode(AnalogEingangsPin, INPUT);
-	Strom=(analogRead(AnalogEingangsPin)*5.00/1024.00)/R1;
-	Spannung=(R1+R2)*Strom;
+	double Eingang=analogRead(AnalogEingangsPin);
+	double Spannung=(Eingang*5.0)/1024;
+	Spannung=Spannung/Teiler;
 	return Spannung;
+
 }
 
 //Spannungsbereich für die Akkumessungen berechnen Beispiel 8,4V-6V=2,4V
@@ -333,15 +213,16 @@ bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
 {
 	if (Akku_Messbereich==0.00)
 	{
-		Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
+		Akku_Messbereich=Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
 	}
 
 	//Akkumessung für akku 2 Akku GND auf A6
 	//Akkumessung für akku 1 Akkugesammnt GND auf A7
-	Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
-	AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
+	Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
+	AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
 	Akkuspannung1 = AkkuSpannungGesamt-Akkuspannung2;
 	Akku_Prozent = (((Akkuspannung1-AkkuSpannungMin)/Akku_Messbereich*100)+((Akkuspannung2-AkkuSpannungMin)/Akku_Messbereich*100)/2);
+
 
 
 	if ((Akkuspannung1 <=  AkkuSpannungKritisch || Akkuspannung2 <= AkkuSpannungKritisch))

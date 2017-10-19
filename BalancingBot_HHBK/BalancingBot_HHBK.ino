@@ -10,6 +10,7 @@
 #include <EEPROMex.h>
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
+#include "Andi_Stepper_Motor.h"
 #include "Andi_Bibilothek_BalancingBot.h"
 #include <PID_v1_Andi.h>
 
@@ -23,9 +24,6 @@ double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Ge
 
 PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
-
-Stepper_Motor Motor_Links(false,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
-Stepper_Motor Motor_Rechts(true,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 
@@ -52,9 +50,10 @@ void setup()
 	PID_Regler_Winkel.SetMode(AUTOMATIC);
 	PID_Regler_Winkel.SetOutputLimits(-120,120);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Sollwert_PID_Winkel=0.00;
+	Motor_Links.StepMode_setzen(Stepper_Motor::Vollschritt);
+	Motor_Rechts.StepMode_setzen(Stepper_Motor::Vollschritt);
 	Statusmeldung();
 }
-
 
  //the loop function runs over and over again until power down or reset
 void loop() 
@@ -77,17 +76,20 @@ void loop()
 	if (MotorenEINAUS==true)
 	{
 		//Winkel auslesen
-		Eingang_PID_Winkel=GET_KalmanWinkelX();
+		//Eingang_PID_Winkel=GET_KalmanWinkelX();
 		//PID-Regler ausführen
-		PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
-		Motoren_Steuerung(Ausgang_PID_Winkel,0,0);
+		//PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
+		//Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
+		
+		Ausgangsregister_schreiben(Motor_Links.Step(1,100),false);
 	}
 
-	Umkippschutz(20,GET_KalmanWinkelX());
+	//Umkippschutz(20,GET_KalmanWinkelX());
 
 	//PID_Regler_Geschwindigkeit.Compute();
-	Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
-	Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehäuselüftersteuerung
+	Akkuueberwachung(6,7);
+	//Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehäuselüftersteuerung
+	//cmdMessenger.sendCmd(cmd_Anzeige_Text,analogRead(Akkuspannung2));
 
 	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
 }

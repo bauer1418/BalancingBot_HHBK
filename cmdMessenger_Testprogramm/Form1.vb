@@ -134,7 +134,7 @@ Public Class Form1
     End Sub
     Private Sub Akkustatus(ByVal arguments As ReceivedCommand)
         MsgBox(arguments.CmdId)
-        lbEmpfangeDaten.Items.Add("Akkustand: " + arguments.ReadFloatArg().ToString("0.0%"))
+        lbEmpfangeDaten.Items.Add("Akkustand: " + arguments.ReadFloatArg().ToString)
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
     Private Sub Neue_Daten_String(ByVal arguments As ReceivedCommand)

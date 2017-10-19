@@ -30,5 +30,8 @@
     <ClInclude Include="Andi_Bibilothek_BalancingBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Andi_Stepper_Motor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

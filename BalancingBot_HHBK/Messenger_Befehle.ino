@@ -142,6 +142,16 @@ void MPU_Temperatur()
 void MotorenSchalten()
 {
 	MotorenEINAUS=cmdMessenger.readBoolArg();
+	if (MotorenEINAUS==true)
+	{
+		Motor_Links.Aktiv_Schalten(true);
+		Motor_Rechts.Aktiv_Schalten(true);
+	}
+	else
+	{
+		Motor_Links.Aktiv_Schalten(false);
+		Motor_Rechts.Aktiv_Schalten(false);
+	}
 	cmdMessenger.sendCmd(cmd_MotorenEINAUS,MotorenEINAUS);
 }
 void P_I_D_Werte()
