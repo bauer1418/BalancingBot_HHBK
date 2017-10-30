@@ -6,7 +6,7 @@
 
 //Benötigte Bibilotheken
 
-#include "EEPROM.h"//2
+#include "EEPROM.h"
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
 #include "Andi_Stepper_Motor.h"
