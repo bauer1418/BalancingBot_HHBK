@@ -6,6 +6,16 @@
 
 #include <Wire.h>
 #include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
+#include "Andi_Bibilothek_BalancingBot.h"
+#include "Messenger_Enum.h"
+
+
+
+
+uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes);
+uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool sendStop);
+uint8_t i2cWrite(uint8_t registerAddress, uint8_t data, bool sendStop);
+
 
 /* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
@@ -43,10 +53,24 @@ double offset_acelX, offset_acelY, offset_acelZ, offset_gyroX, offset_gyroY, off
 uint32_t timer;
 uint8_t i2cData[14]; // Buffer for I2C data
 
-uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes);
-uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool sendStop);
-uint8_t i2cWrite(uint8_t registerAddress, uint8_t data, bool sendStop);
-
+double GET_KalmanWinkelY();
+double GET_KalmanWinkelX();
+double GET_MPU_Temperatur();
+double Offset_acelx();
+void Offset_acelx(double OffsetWert);
+double Offset_acely();
+void Offset_acely(double OffsetWert);
+double Offset_acelz();
+void Offset_acelz(double OffsetWert);
+double Offset_gyrox();
+void Offset_gyrox(double OffsetWert);
+double Offset_gyroy();
+void Offset_gyroy(double OffsetWert);
+double Offset_gyroz();
+void Offset_gyroz(double OffsetWert);
+void MPU6050_Kalibrieren();
+bool MPUsetup();
+void MPU_Zyklus();
 
 
 

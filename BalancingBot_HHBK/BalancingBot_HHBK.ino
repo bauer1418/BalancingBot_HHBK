@@ -6,25 +6,17 @@
 
 //Benötigte Bibilotheken
 
-#include "EEPROM.h"
+
+
 #include <Adafruit_NeoPixel.h>
-#include <CmdMessenger.h>
-#include "Andi_Stepper_Motor.h"
-#include "Andi_Bibilothek_BalancingBot.h"
-#include <PID_v1_Andi.h>
+
+
 
 unsigned long Zykluszeit=0;				//akutelle Zykluszeit
 bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
 
 
-double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
-double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
 
-
-PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
-PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
-
-CmdMessenger cmdMessenger = CmdMessenger(Serial);
 
  //the setup function runs once when you press reset or power the board
 void setup() 
