@@ -16,10 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Messenger_Befehle.ino" />
-    <None Include="MPU6050_BalancingBot_HHBK.ino" />
     <None Include="NeoPixel.ino" />
     <None Include="BalancingBot_HHBK.ino" />
-    <None Include="Andi_Bibilothek_BalancingBot.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.BalancingBot_HHBK.vsarduino.h">
@@ -29,6 +27,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Andi_Stepper_Motor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MPU6050_BalancingBot_HHBK.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
