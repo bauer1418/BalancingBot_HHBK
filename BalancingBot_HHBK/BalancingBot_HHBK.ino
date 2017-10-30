@@ -6,8 +6,7 @@
 
 //Benötigte Bibilotheken
 
-#include <EEPROMVar.h>
-#include <EEPROMex.h>
+#include "EEPROM.h"//2
 #include <Adafruit_NeoPixel.h>
 #include <CmdMessenger.h>
 #include "Andi_Stepper_Motor.h"
@@ -81,7 +80,7 @@ void loop()
 		//PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
 		//Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
 		
-		Ausgangsregister_schreiben(Motor_Links.Step(1,100),false);
+		Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
 	}
 
 	//Umkippschutz(20,GET_KalmanWinkelX());
