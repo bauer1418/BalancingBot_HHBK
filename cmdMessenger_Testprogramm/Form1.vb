@@ -24,6 +24,7 @@ Public Class Form1
         cmd_Anzeige_Text            'Anzuzeigender Text aus dem Arduino
         cmd_Zyklusdaten             'Zyklusdaten aus dem Arduino
         cmd_PID_Werte               'PID Werte verstellen oder auslesen 1=Werte setzen Winkelregler 2=Werte setzen Geschwindigkeitsregler 3= Werte lesen Winkelregler 4=Werte lesen Geschwindigkeitsregler
+
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -133,9 +134,7 @@ Public Class Form1
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
     Private Sub Akkustatus(ByVal arguments As ReceivedCommand)
-        MsgBox(arguments.CmdId)
-        lbEmpfangeDaten.Items.Add("Akkustand: " + arguments.ReadFloatArg().ToString)
-        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
+        MsgBox("Akkustand: " + arguments.ReadFloatArg().ToString, MsgBoxStyle.Information, "Arduino-Daten")
     End Sub
     Private Sub Neue_Daten_String(ByVal arguments As ReceivedCommand)
         While arguments.Available = True

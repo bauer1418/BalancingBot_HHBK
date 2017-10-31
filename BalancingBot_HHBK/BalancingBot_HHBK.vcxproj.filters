@@ -15,7 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Messenger_Befehle.ino" />
     <None Include="NeoPixel.ino" />
     <None Include="BalancingBot_HHBK.ino" />
   </ItemGroup>
@@ -30,6 +29,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MPU6050_BalancingBot_HHBK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Messenger_Befehle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

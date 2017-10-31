@@ -4,16 +4,17 @@
  Author:	Andreas Bauer
 */
 
-//Benötigte Bibilotheken
-
-
-
-#include <Adafruit_NeoPixel.h>
-#include "Andi_Bibilothek_BalancingBot.h"
-#include "MPU6050_BalancingBot_HHBK.h"
 
 unsigned long Zykluszeit=0;				//akutelle Zykluszeit
 bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
+
+//Benötigte Bibilotheken
+#include <Adafruit_NeoPixel.h>
+#include "Andi_Bibilothek_BalancingBot.h"
+#include "MPU6050_BalancingBot_HHBK.h"
+#include "Messenger_Befehle.h"
+
+
 
 
 

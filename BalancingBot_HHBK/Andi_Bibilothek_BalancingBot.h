@@ -13,14 +13,33 @@
 		#else
 			#include "WProgram.h"
 		#endif
-	#include "Messenger_Enum.h"
-	#include <PID_v1_Andi.h>
-	#include <CmdMessenger.h>
-	#include "Andi_Stepper_Motor.h"
-	#include "EEPROM.h"
-	#include "MPU6050_BalancingBot_HHBK.h"
+	
+	//Im EEPROM gespeicherte Einstellungen
+	struct Balancing_Bot_Einstellungen
+	{
+		int Werte_ueberschrieben;					//Anzahl der Überschreibvorgänge des EEPROMs
+		double PID_Regler_Winkel_P;					//P-Einstellung für Winkel-Regler
+		double PID_Regler_Winkel_I;					//I-Einstellung für Winkel-Regler
+		double PID_Regler_Winkel_D;					//D-Einstellung für Winkel-Regler
+		double PID_Regler_Geschwindigkeit_P;		//P-Einstellung für Geschwindigkeits-Regler
+		double PID_Regler_Geschwindigkeit_I;		//I-Einstellung für Geschwindigkeits-Regler
+		double PID_Regler_Geschwindigkeit_D;		//D-Einstellung für Geschwindigkeits-Regler
+		int PID_Regler_Winkel_Min;					//Minimaler Ausgangswert des Winkel-Reglers
+		int PID_Regler_Winkel_Max;					//Maximaler Ausgangswert des Winkel-Reglers
+		int PID_Regler_Geschwindigkeit_Min;			//Minimaler Ausgangswert des Geschwindigkeits-Reglers
+		int PID_Regler_Geschwindigkeit_Max;			//Maximaler Ausgangswert des Geschwindigkeits-Reglers
+		byte Schrittmodus;							//Stepmodus der Motorregler
+		byte Platinenluefter_Sollwert;				//Sollwert für Platinenlüfter PWM
+		byte Gehaeuseluefter_Sollwert;				//Sollwert für Gehäuselüfter PWM
+		byte NeoPixelRing_Helligkeit;				//Helligkeitseinstellung des NeoPixelRings
+		double MPU_Offset_AcelX;					//Offsetwert für MPU AcelX
+		double MPU_Offset_AcelY;					//Offsetwert für MPU AcelY
+		double MPU_Offset_AcelZ;					//Offsetwert für MPU AcelZ
+		double MPU_Offset_GyroX;					//Offsetwert für MPU GyroX
+		double MPU_Offset_GyroY;					//Offsetwert für MPU GyroY
+		double MPU_Offset_GyroZ;					//Offsetwert für MPU GyroZ
+	};
 
-	//Variablen
 	//Fehler und Statusüberwachung
 	byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
 	byte Fehlerspeicher=0;					//Fehlerstatus Bedeutung siehe Enum Fehlermeldungen
@@ -28,10 +47,28 @@
 	unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
 	unsigned long letzer_Step_Rechts=0;		//Zeitpunkt des letzten Steps für Motor Rechts
 
-	CmdMessenger cmdMessenger = CmdMessenger(Serial);
+	//Funktionsprototypen
+	Balancing_Bot_Einstellungen Daten_aus_EEPROM_lesen();
+	void Einstellungen_mit_Standart_Werten_beschreiben();
+	void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten);
+	void Pin_Setup();
+	bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt);
+	void test();
+	void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin);
+	void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step);
+	void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links);
+	void Fehlerauswertung();
+	double Spannungsteiler (double R1, double R2, int AnalogEingangsPin);
+	double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax);
+	bool Akkuueberwachung (int AkkuPin1, int AkkuPin2);
+	bool Zeit_Takt_20ms();
+	bool Zeit_Takt_100ms();
+	bool Zeit_Takt_1s();
+	unsigned long Zykluszeit_Messung();
+	bool Umkippschutz(int MaxWinkel, double EingangsWinkel);
 
 
-	//Lüfter
+		//Lüfter
 	int LuefterPlatineDrehzahl=0;			//Lüfterdrehzahl in % für Platine
 	int LuefterGehaeuseDrehzahl=0;			//Lüfterdrehzahl in % für Gehäuse
 
@@ -69,6 +106,28 @@
 	const int Pin_Akku2_Messung = 19;		//AnalogInput Spannungsmessung Akku 2
 
 
+	//Include-Anweisungen
+	#include "Messenger_Enum.h"
+	#include <PID_v1_Andi.h>
+		//PID-Regler
+		double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
+		double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
+		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
+		PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
+	#include <CmdMessenger.h>
+		//CmdMessenger Starten
+		CmdMessenger cmdMessenger = CmdMessenger(Serial);
+	#include "Andi_Stepper_Motor.h"
+		//Stepper Motoren initialisieren	
+		Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+		Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+	#include "EEPROM.h"
+	#include "MPU6050_BalancingBot_HHBK.h"
+
+
+
+	
+	
 
 	//Parameter für die Funktionen in dieser Library
 
@@ -76,55 +135,19 @@
 	unsigned long  Startzeitpunkt_Zykluszeit_Messung=0;//Zwischenspeicher für Zykluszeitmessung in µs
 	byte Anzahl_20ms_Takte=0;//Zwischenspeicher für 100ms und 1s Zeit Takte
 
-	Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
-	Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 
 	
-	double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
-	double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
-
-
-	PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
-	PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
-
-
-	//Im EEPROM gespeicherte Einstellungen
-	struct Balancing_Bot_Einstellungen
-	{
-		int Werte_ueberschrieben;					//Anzahl der Überschreibvorgänge des EEPROMs
-		double PID_Regler_Winkel_P;					//P-Einstellung für Winkel-Regler
-		double PID_Regler_Winkel_I;					//I-Einstellung für Winkel-Regler
-		double PID_Regler_Winkel_D;					//D-Einstellung für Winkel-Regler
-		double PID_Regler_Geschwindigkeit_P;		//P-Einstellung für Geschwindigkeits-Regler
-		double PID_Regler_Geschwindigkeit_I;		//I-Einstellung für Geschwindigkeits-Regler
-		double PID_Regler_Geschwindigkeit_D;		//D-Einstellung für Geschwindigkeits-Regler
-		int PID_Regler_Winkel_Min;					//Minimaler Ausgangswert des Winkel-Reglers
-		int PID_Regler_Winkel_Max;					//Maximaler Ausgangswert des Winkel-Reglers
-		int PID_Regler_Geschwindigkeit_Min;			//Minimaler Ausgangswert des Geschwindigkeits-Reglers
-		int PID_Regler_Geschwindigkeit_Max;			//Maximaler Ausgangswert des Geschwindigkeits-Reglers
-		byte Schrittmodus;							//Stepmodus der Motorregler
-		byte Platinenluefter_Sollwert;				//Sollwert für Platinenlüfter PWM
-		byte Gehaeuseluefter_Sollwert;				//Sollwert für Gehäuselüfter PWM
-		byte NeoPixelRing_Helligkeit;				//Helligkeitseinstellung des NeoPixelRings
-		double MPU_Offset_AcelX;					//Offsetwert für MPU AcelX
-		double MPU_Offset_AcelY;					//Offsetwert für MPU AcelY
-		double MPU_Offset_AcelZ;					//Offsetwert für MPU AcelZ
-		double MPU_Offset_GyroX;					//Offsetwert für MPU GyroX
-		double MPU_Offset_GyroY;					//Offsetwert für MPU GyroY
-		double MPU_Offset_GyroZ;					//Offsetwert für MPU GyroZ
-	};
-
+	//Einstellungensdatei erstellen
 	Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
-
 	
-//Daten aus dem EEPROM auslesen von Adresse 0 startend
-//return Einstellungen
-Balancing_Bot_Einstellungen Daten_aus_EEPROM_lesen()
-{
-	Balancing_Bot_Einstellungen EEPROM_Daten;
-	EEPROM.get(0,EEPROM_Daten);
-	return EEPROM_Daten;
-}
+	//Daten aus dem EEPROM auslesen von Adresse 0 startend
+	//return Einstellungen
+	Balancing_Bot_Einstellungen Daten_aus_EEPROM_lesen()
+	{
+		Balancing_Bot_Einstellungen EEPROM_Daten;
+		EEPROM.get(0,EEPROM_Daten);
+		return EEPROM_Daten;
+	}
 
 
 
@@ -141,7 +164,7 @@ void Einstellungen_mit_Standart_Werten_beschreiben()
 	System_Einstellungen.PID_Regler_Winkel_Max=120;					//Maximaler Ausgangswert des Winkel-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Min=-5;			//Minimaler Ausgangswert des Geschwindigkeits-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Max=5;			//Maximaler Ausgangswert des Geschwindigkeits-Reglers
-	System_Einstellungen.Schrittmodus=0;	//Stepmodus der Motorregler
+	System_Einstellungen.Schrittmodus=Stepper_Motor::Vollschritt;	//Stepmodus der Motorregler
 	System_Einstellungen.Platinenluefter_Sollwert=207;				//Sollwert für Platinenlüfter PWM
 	System_Einstellungen.Gehaeuseluefter_Sollwert=207;				//Sollwert für Gehäuselüfter PWM
 	System_Einstellungen.NeoPixelRing_Helligkeit=25;				//Helligkeit NeoPixelRing
@@ -154,6 +177,7 @@ void Einstellungen_mit_Standart_Werten_beschreiben()
 
 
 }
+
 void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 {
 	Offset_acelx(EEPROM_Daten.MPU_Offset_AcelX);
