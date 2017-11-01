@@ -34,5 +34,8 @@
     <ClInclude Include="Messenger_Befehle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Andi_Bibilothek_BalancingBot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

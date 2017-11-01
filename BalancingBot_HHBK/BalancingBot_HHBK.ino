@@ -65,18 +65,18 @@ void loop()
 	//}
 	Zyklusdaten_senden();
 
-	if (MotorenEINAUS==true)
-	{
+	///*if (MotorenEINAUS==true)
+	//	{*/
 		//Winkel auslesen
-		//Eingang_PID_Winkel=GET_KalmanWinkelX();
+		Eingang_PID_Winkel=GET_KalmanWinkelY();
 		//PID-Regler ausführen
-		//PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
-		//Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
+		PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
+		Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
 		
-		Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
-	}
+		//Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
+//}
 
-	//Umkippschutz(20,GET_KalmanWinkelX());
+	Umkippschutz(20,GET_KalmanWinkelY());
 
 	//PID_Regler_Geschwindigkeit.Compute();
 	Akkuueberwachung(6,7);

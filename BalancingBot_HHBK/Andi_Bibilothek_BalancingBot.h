@@ -122,6 +122,9 @@
 		Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 		Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 	#include "EEPROM.h"
+		//Einstellungensdatei erstellen
+		Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
+	
 	#include "MPU6050_BalancingBot_HHBK.h"
 
 
@@ -137,8 +140,6 @@
 
 
 	
-	//Einstellungensdatei erstellen
-	Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
 	
 	//Daten aus dem EEPROM auslesen von Adresse 0 startend
 	//return Einstellungen
@@ -160,8 +161,8 @@ void Einstellungen_mit_Standart_Werten_beschreiben()
 	System_Einstellungen.PID_Regler_Geschwindigkeit_P=0;			//P-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_I=0;			//I-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_D=0;			//D-Einstellung für Geschwindigkeits-Regler
-	System_Einstellungen.PID_Regler_Winkel_Min=-120;				//Minimaler Ausgangswert des Winkel-Reglers
-	System_Einstellungen.PID_Regler_Winkel_Max=120;					//Maximaler Ausgangswert des Winkel-Reglers
+	System_Einstellungen.PID_Regler_Winkel_Min=120;					//Minimaler Ausgangswert des Winkel-Reglers
+	System_Einstellungen.PID_Regler_Winkel_Max=-120;				//Maximaler Ausgangswert des Winkel-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Min=-5;			//Minimaler Ausgangswert des Geschwindigkeits-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Max=5;			//Maximaler Ausgangswert des Geschwindigkeits-Reglers
 	System_Einstellungen.Schrittmodus=Stepper_Motor::Vollschritt;	//Stepmodus der Motorregler
@@ -349,41 +350,43 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	//getestet Funktion i.O. am 19.10.17
 	bool Akkuueberwachung (int AkkuPin1, int AkkuPin2)
 	{
-		if (Akku_Messbereich==0.00)
-		{
-			Akku_Messbereich=Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
-		}
-
-		//Akkumessung für akku 2 Akku GND auf A6
-		//Akkumessung für akku 1 Akkugesammnt GND auf A7
-		Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
-		AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
-		Akkuspannung1 = AkkuSpannungGesamt-Akkuspannung2;
-		Akku_Prozent = (((Akkuspannung1-AkkuSpannungMin)/Akku_Messbereich*100)+((Akkuspannung2-AkkuSpannungMin)/Akku_Messbereich*100))/2;
-
-
-
-		if ((Akkuspannung1 <=  AkkuSpannungKritisch || Akkuspannung2 <= AkkuSpannungKritisch))
-		{
-			Status= 6;
-			return false;
-
-		}
-	   else if (Akkuspannung1 <  AkkuSpannungNiedrig || Akkuspannung2 < AkkuSpannungNiedrig)
-		{
-			Status=5;
-			return false;
-		}
-		else
-		{
-			if (Status==AkkuSpannungNiedrig||Status==AkkuSpannungKritisch)
+		//if (Zeit_Takt_1s==true)
+		//{
+			if (Akku_Messbereich==0.00)
 			{
-				Status=4;
+				Akku_Messbereich=Akku_Messbereich_Berechnen(AkkuSpannungMin,AkkuSpannungMax);
 			}
-			return true;
-		}
-	}
 
+			//Akkumessung für akku 2 Akku GND auf A6
+			//Akkumessung für akku 1 Akkugesammnt GND auf A7
+			Akkuspannung2 = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin1);
+			AkkuSpannungGesamt = Spannungsteiler(SpannungsmessungR1,SpannungsmessungR2,AkkuPin2);
+			Akkuspannung1 = AkkuSpannungGesamt-Akkuspannung2;
+			Akku_Prozent = (((Akkuspannung1-AkkuSpannungMin)/Akku_Messbereich*100)+((Akkuspannung2-AkkuSpannungMin)/Akku_Messbereich*100))/2;
+
+
+
+			if ((Akkuspannung1 <=  AkkuSpannungKritisch || Akkuspannung2 <= AkkuSpannungKritisch))
+			{
+				Status= 6;
+				return false;
+
+			}
+		   else if (Akkuspannung1 <  AkkuSpannungNiedrig || Akkuspannung2 < AkkuSpannungNiedrig)
+			{
+				Status=5;
+				return false;
+			}
+			else
+			{
+				if (Status==AkkuSpannungNiedrig||Status==AkkuSpannungKritisch)
+				{
+					Status=4;
+				}
+				return true;
+			}
+		//}
+	}
 
 
 	//Zeitmessung für 20ms Takt

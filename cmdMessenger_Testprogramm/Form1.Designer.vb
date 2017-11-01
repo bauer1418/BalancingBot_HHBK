@@ -22,6 +22,7 @@ Partial Class Form1
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.bttCOMVerbinden = New System.Windows.Forms.Button()
         Me.cmbCOMPort = New System.Windows.Forms.ComboBox()
         Me.cmbBefehl = New System.Windows.Forms.ComboBox()
@@ -31,6 +32,11 @@ Partial Class Form1
         Me.rbbCOMStatus = New System.Windows.Forms.RadioButton()
         Me.lbEmpfangeDaten = New System.Windows.Forms.ListBox()
         Me.lbbZyklusdaten = New System.Windows.Forms.Label()
+        Me.bttMotorenEINAUS = New System.Windows.Forms.Button()
+        Me.bttPID_Winkel_ändern = New System.Windows.Forms.Button()
+        Me.bttPID_Speed_ändern = New System.Windows.Forms.Button()
+        Me.Akku_Timer = New System.Windows.Forms.Timer(Me.components)
+        Me.LbbAkku = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'bttCOMVerbinden
@@ -112,11 +118,58 @@ Partial Class Form1
         Me.lbbZyklusdaten.TabIndex = 8
         Me.lbbZyklusdaten.Text = "Zyklusdaten"
         '
+        'bttMotorenEINAUS
+        '
+        Me.bttMotorenEINAUS.BackColor = System.Drawing.Color.Red
+        Me.bttMotorenEINAUS.Location = New System.Drawing.Point(490, 12)
+        Me.bttMotorenEINAUS.Name = "bttMotorenEINAUS"
+        Me.bttMotorenEINAUS.Size = New System.Drawing.Size(88, 39)
+        Me.bttMotorenEINAUS.TabIndex = 9
+        Me.bttMotorenEINAUS.Text = "Motoren AUS"
+        Me.bttMotorenEINAUS.UseVisualStyleBackColor = False
+        '
+        'bttPID_Winkel_ändern
+        '
+        Me.bttPID_Winkel_ändern.Location = New System.Drawing.Point(490, 57)
+        Me.bttPID_Winkel_ändern.Name = "bttPID_Winkel_ändern"
+        Me.bttPID_Winkel_ändern.Size = New System.Drawing.Size(88, 39)
+        Me.bttPID_Winkel_ändern.TabIndex = 10
+        Me.bttPID_Winkel_ändern.Text = "PID-Winkel ändern"
+        Me.bttPID_Winkel_ändern.UseVisualStyleBackColor = True
+        '
+        'bttPID_Speed_ändern
+        '
+        Me.bttPID_Speed_ändern.Location = New System.Drawing.Point(490, 102)
+        Me.bttPID_Speed_ändern.Name = "bttPID_Speed_ändern"
+        Me.bttPID_Speed_ändern.Size = New System.Drawing.Size(88, 39)
+        Me.bttPID_Speed_ändern.TabIndex = 11
+        Me.bttPID_Speed_ändern.Text = "PID-Speed ändern"
+        Me.bttPID_Speed_ändern.UseVisualStyleBackColor = True
+        '
+        'Akku_Timer
+        '
+        Me.Akku_Timer.Enabled = True
+        Me.Akku_Timer.Interval = 10000
+        '
+        'LbbAkku
+        '
+        Me.LbbAkku.AutoSize = True
+        Me.LbbAkku.Location = New System.Drawing.Point(487, 145)
+        Me.LbbAkku.MaximumSize = New System.Drawing.Size(0, 100)
+        Me.LbbAkku.Name = "LbbAkku"
+        Me.LbbAkku.Size = New System.Drawing.Size(74, 13)
+        Me.LbbAkku.TabIndex = 12
+        Me.LbbAkku.Text = "Akku:XX.XX%"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(499, 161)
+        Me.ClientSize = New System.Drawing.Size(594, 167)
+        Me.Controls.Add(Me.LbbAkku)
+        Me.Controls.Add(Me.bttPID_Speed_ändern)
+        Me.Controls.Add(Me.bttPID_Winkel_ändern)
+        Me.Controls.Add(Me.bttMotorenEINAUS)
         Me.Controls.Add(Me.lbbZyklusdaten)
         Me.Controls.Add(Me.lbEmpfangeDaten)
         Me.Controls.Add(Me.rbbCOMStatus)
@@ -143,5 +196,10 @@ Partial Class Form1
     Friend WithEvents rbbCOMStatus As System.Windows.Forms.RadioButton
     Friend WithEvents lbEmpfangeDaten As System.Windows.Forms.ListBox
     Friend WithEvents lbbZyklusdaten As System.Windows.Forms.Label
+    Friend WithEvents bttMotorenEINAUS As System.Windows.Forms.Button
+    Friend WithEvents bttPID_Winkel_ändern As System.Windows.Forms.Button
+    Friend WithEvents bttPID_Speed_ändern As System.Windows.Forms.Button
+    Friend WithEvents Akku_Timer As System.Windows.Forms.Timer
+    Friend WithEvents LbbAkku As System.Windows.Forms.Label
 
 End Class

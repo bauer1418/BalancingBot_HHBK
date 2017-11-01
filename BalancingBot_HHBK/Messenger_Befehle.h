@@ -39,7 +39,7 @@
 		if (Zeit_Takt_20ms()==true)
 		{
 			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);			//Mehrfach Senden starten
-			cmdMessenger.sendCmdArg(GET_KalmanWinkelX());		//Aktueller KalmanWinkel senden
+			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());		//Aktueller KalmanWinkel senden
 			cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);		//PID Winkel Ausgangswert				
 			cmdMessenger.sendCmdArg(MotorenEINAUS);				//Aktueller MotorEINAUS Status senden
 			cmdMessenger.sendCmdArg(Zykluszeit);				//Zykluszeit senden
@@ -49,6 +49,16 @@
 		//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
 	}
 
+	void EEPROM_lesen()
+	{
+		System_Einstellungen=Daten_aus_EEPROM_lesen();
+		cmdMessenger.sendCmd(cmd_Einstellungen_aus_EEPROM_lesen,1);
+	}
+	void EEPROM_speichern()
+	{
+		EEPROM.put(0,System_Einstellungen);
+		cmdMessenger.sendCmd(cmd_Einstellungen_ins_EEPROM_speichern,F("Daten gespeichert"));
+	}
 	//Aktuellen Systemstatus senden
 	void Statusmeldung()
 	{
@@ -167,6 +177,9 @@
 		if (Regler== 1)//Neue PID Werte für den Winkelregler festlegen und als Antwort zurücksenden
 		{
 			PID_Regler_Winkel.SetTunings(P,I,D);
+			System_Einstellungen.PID_Regler_Winkel_P=P;
+			System_Einstellungen.PID_Regler_Winkel_I=I;
+			System_Einstellungen.PID_Regler_Winkel_D=D;
 			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
 			cmdMessenger.sendCmdArg(1);
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
@@ -177,6 +190,9 @@
 		else if (Regler== 2)//Neue PID Werte für den Geschwindigkeitsregler festlegen und als Antwort zurücksenden
 		{
 			PID_Regler_Geschwindigkeit.SetTunings(P,I,D);
+			System_Einstellungen.PID_Regler_Geschwindigkeit_P=P;
+			System_Einstellungen.PID_Regler_Geschwindigkeit_I=I;
+			System_Einstellungen.PID_Regler_Geschwindigkeit_D=D;
 			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
 			cmdMessenger.sendCmdArg(2);
 			cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKp());
@@ -222,6 +238,9 @@
 		cmdMessenger.attach(cmd_PID_Winkel_MinMax,PID_Winkel_MinMax);
 		cmdMessenger.attach(cmd_PID_Winkel_Sollwert,PID_Winkel_Sollwert);
 		cmdMessenger.attach(cmd_P_I_D_Werte,P_I_D_Werte);
+		cmdMessenger.attach(cmd_Einstellungen_aus_EEPROM_lesen,EEPROM_lesen);
+		cmdMessenger.attach(cmd_Einstellungen_ins_EEPROM_speichern,EEPROM_speichern);
+
 		cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
 	}
 #endif // !_Messenger_Befehle
