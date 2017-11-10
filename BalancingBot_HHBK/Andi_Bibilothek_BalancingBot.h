@@ -112,7 +112,7 @@
 		//PID-Regler
 		double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
 		double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
-		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10,0,0,DIRECT);//PID-Regler für Wickelsteuerung
+		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10l,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 		PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 	#include <CmdMessenger.h>
 		//CmdMessenger Starten
@@ -124,10 +124,10 @@
 	#include "EEPROM.h"
 		//Einstellungensdatei erstellen
 		Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
-	
+	#include "Andi_ZeitTakt_Funktionen.h"
+		ZeitTakt_Funktionen Allgemeine_Zeitfunktion;
 	#include "MPU6050_BalancingBot_HHBK.h"
-
-
+	
 
 	
 	
@@ -389,57 +389,57 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	}
 
 
-	//Zeitmessung für 20ms Takt
-	//Return TRUE wenn 20ms seit dem letzten Takt abgelaufen sind
-	//getestet Funktion i.O. am 28.09.17
-	bool Zeit_Takt_20ms()
-	{
-		if (Anzahl_20ms_Takte>50)
-		{
-			Anzahl_20ms_Takte=1;
-		}
-		if (micros()>=(Startzeitpunkt_Zeit_Takt_20ms+20000))
-		{
-			Anzahl_20ms_Takte++;
-			Startzeitpunkt_Zeit_Takt_20ms=micros();
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	
-	}
-	//Zeit Takt alle 100ms wird aus dem 20ms Takt generiert
-	//Return TRUE wenn 100ms seit dem letzten Takt abgelaufen sind
-	//getestet Funktion i.O. am 28.09.17
-	bool Zeit_Takt_100ms()
-	{
-		if (Anzahl_20ms_Takte%5==0)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+	////Zeitmessung für 20ms Takt
+	////Return TRUE wenn 20ms seit dem letzten Takt abgelaufen sind
+	////getestet Funktion i.O. am 28.09.17
+	//bool Zeit_Takt_20ms()
+	//{
+	//	if (Anzahl_20ms_Takte>50)
+	//	{
+	//		Anzahl_20ms_Takte=1;
+	//	}
+	//	if (micros()>=(Startzeitpunkt_Zeit_Takt_20ms+20000))
+	//	{
+	//		Anzahl_20ms_Takte++;
+	//		Startzeitpunkt_Zeit_Takt_20ms=micros();
+	//		return true;
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//
+	//}
+	////Zeit Takt alle 100ms wird aus dem 20ms Takt generiert
+	////Return TRUE wenn 100ms seit dem letzten Takt abgelaufen sind
+	////getestet Funktion i.O. am 28.09.17
+	//bool Zeit_Takt_100ms()
+	//{
+	//	if (Anzahl_20ms_Takte%5==0)
+	//	{
+	//		return true;
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//}
 
-	//Zeit Takt alle 1s wird aus dem 20ms Takt generiert
-	//Return TRUE wenn 1s seit dem letzten Takt abgelaufen sind
-	//getestet Funktion i.O. am 28.09.17
-	bool Zeit_Takt_1s()
-	{
-		if (Anzahl_20ms_Takte%50==0)
-		{
-			Anzahl_20ms_Takte=1;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+	////Zeit Takt alle 1s wird aus dem 20ms Takt generiert
+	////Return TRUE wenn 1s seit dem letzten Takt abgelaufen sind
+	////getestet Funktion i.O. am 28.09.17
+	//bool Zeit_Takt_1s()
+	//{
+	//	if (Anzahl_20ms_Takte%50==0)
+	//	{
+	//		Anzahl_20ms_Takte=1;
+	//		return true;
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//}
 
 
 	//Muss im loop() ausgeführt werden

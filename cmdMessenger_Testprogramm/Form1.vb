@@ -72,7 +72,7 @@ Public Class Form1
 
         Try
             If rbbCOMStatus.Checked = False Then
-                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 57600, .DtrEnable = False}}
+                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 57600, .DtrEnable = True}}
 
 
 
@@ -216,6 +216,7 @@ Public Class Form1
             Dim Command
             Command = New SendCommand(Befehle.cmd_Akkustand_Prozent)
             Messenger.SendCommand(Command)
+
         End If
     End Sub
 

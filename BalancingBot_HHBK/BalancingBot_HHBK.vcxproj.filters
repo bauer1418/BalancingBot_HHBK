@@ -37,5 +37,8 @@
     <ClInclude Include="Andi_Bibilothek_BalancingBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Andi_ZeitTakt_Funktionen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

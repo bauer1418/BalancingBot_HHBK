@@ -8,11 +8,12 @@
 unsigned long Zykluszeit=0;				//akutelle Zykluszeit
 bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
 
-//Benötigte Bibilotheken
+//Benï¿½tigte Bibilotheken
 #include <Adafruit_NeoPixel.h>
 #include "Andi_Bibilothek_BalancingBot.h"
 #include "MPU6050_BalancingBot_HHBK.h"
 #include "Messenger_Befehle.h"
+#include "Andi_ZeitTakt_Funktionen.h"
 
 
 
@@ -24,7 +25,7 @@ void setup()
 {
 	Pin_Setup();
 
-	analogWrite(Pin_Platinenluefter,207);//Platinenlüfter auf 80% stellen
+	analogWrite(Pin_Platinenluefter,207);//Platinenlï¿½fter auf 80% stellen
 
 	Setup_cmdMessenger();
 
@@ -51,10 +52,10 @@ void setup()
 void loop() 
 {
 	Zykluszeit = Zykluszeit_Messung();
-	Zeit_Takt_20ms();
+	Allgemeine_Zeitfunktion.ZeitTakt();
 	
 	//Akkuueberwachung(Pin_Akku1_Messung,Pin_Akku2_Messung);
-	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
+	//MPU Zyklus nur ausfï¿½hren wenn MPU nicht gestï¿½rt ist
 	if (Fehlerspeicher!=MPU_NOT_FOUND && Fehlerspeicher!=MPU_READ_FAILED && Fehlerspeicher!=MPU_READ_TIMEOUT && Fehlerspeicher!=MPU_Write_FAILED)
 	{
 		MPU_Zyklus();
@@ -69,8 +70,8 @@ void loop()
 	//	{*/
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelY();
-		//PID-Regler ausführen
-		PID_Regler_Winkel.Compute();//PID-Regler für die Winkelsteuerung zyklisch ausführen
+		//PID-Regler ausfï¿½hren
+		PID_Regler_Winkel.Compute();//PID-Regler fï¿½r die Winkelsteuerung zyklisch ausfï¿½hren
 		Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
 		
 		//Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
@@ -80,8 +81,8 @@ void loop()
 
 	//PID_Regler_Geschwindigkeit.Compute();
 	Akkuueberwachung(6,7);
-	//Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehäuselüftersteuerung
+	//Lueftersteuerung_Temperatur(GET_MPU_Temperatur(),Pin_Gehaeuseluefter);//Gehï¿½uselï¿½ftersteuerung
 	//cmdMessenger.sendCmd(cmd_Anzeige_Text,analogRead(Akkuspannung2));
 
-	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslösen
+	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks auslï¿½sen
 }

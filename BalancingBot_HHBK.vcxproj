@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5F80730-F44F-4478-BDAE-6634EFC2CA88}</ProjectGuid>
+    <RootNamespace>BalancingBot_HHBK</RootNamespace>
+    <ProjectName>BalancingBot_HHBK</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\EEPROM\src;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Adafruit_NeoPixel;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Arduino-CmdMessenger-master;C:\Program Files (x86)\Arduino\libraries\PID_v1_Andi;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\Wire\src;C:\Program Files (x86)\Arduino\libraries\KalmanFilter-master;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Adafruit_NeoPixel\utility;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Arduino-CmdMessenger-master\utility;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\EEPROM\src\utility;C:\Program Files (x86)\Arduino\libraries\KalmanFilter-master\utility;C:\Program Files (x86)\Arduino\libraries\PID_v1_Andi\utility;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\Wire\src\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Users\Andreas Bauer\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs;C:\Users\Andreas Bauer\ownCloud\Abschlussprojekt\Visual Studio\Arduino\BalancingBot_HHBK\BalancingBot_HHBK;C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\EEPROM\src;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Adafruit_NeoPixel;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Arduino-CmdMessenger-master;C:\Program Files (x86)\Arduino\libraries\PID_v1_Andi;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\Extensions\cw2mgawg.mf3\Micro Platforms\default\debuggers\VM_DBG;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\Wire\src;C:\Program Files (x86)\Arduino\libraries\KalmanFilter-master;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\Extensions\cw2mgawg.mf3\Micro Platforms\default\debuggers;C:\Users\Andreas Bauer\Documents\Arduino\libraries;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Arduino-CmdMessenger-master\utility;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\Andreas Bauer\ownCloud\Abschlussprojekt\Visual Studio\Arduino\BalancingBot_HHBK\BalancingBot_HHBK\__vm\.BalancingBot_HHBK.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;_VMDEBUG=1;F_CPU=16000000L;ARDUINO=10800;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BrowseInformation>true</BrowseInformation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\Andreas Bauer\Documents\Arduino\libraries\Arduino-CmdMessenger-master;C:\Users\Andreas Bauer\Documents\Arduino\libraries\Adafruit_NeoPixel;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.20\libraries\Wire\src;C:\Program Files (x86)\Arduino\libraries\KalmanFilter-master;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.20\libraries\EEPROM\src;C:\Program Files (x86)\Arduino\libraries\PID_v1_Andi;C:\Program Files (x86)\Arduino\libraries;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.20\libraries;C:\Users\Andreas Bauer\Documents\Arduino\libraries;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.20\cores\arduino;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.20\variants\eightanaloginputs;C:\Users\Andreas Bauer\ownCloud\Abschlussprojekt\Visual Studio\Arduino\BalancingBot_HHBK\BalancingBot_HHBK;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2/avr/include/;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2//avr/include/avr/;C:\Users\Andreas Bauer\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\Andreas Bauer\ownCloud\Abschlussprojekt\Visual Studio\Arduino\BalancingBot_HHBK\BalancingBot_HHBK\__vm\.BalancingBot_HHBK.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;F_CPU=16000000L;ARDUINO=10800;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BrowseInformation>true</BrowseInformation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="VisualMicro" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="BalancingBot_HHBK.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Andi_Bibilothek_BalancingBot.h" />
+    <ClInclude Include="Andi_Stepper_Motor.h" />
+    <ClInclude Include="EEPROM_Funktionen.h" />
+    <ClInclude Include="Messenger_Befehle.h" />
+    <ClInclude Include="Messenger_Enum.h" />
+    <ClInclude Include="MPU6050_BalancingBot_HHBK.h" />
+    <ClInclude Include="NeoPixel.h" />
+    <ClInclude Include="TEST.h" />
+    <ClInclude Include="__vm\.BalancingBot_HHBK.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EEPROM_Funktionen.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Messenger_Befehle.cpp" />
+    <ClCompile Include="MPU6050_BalancingBot_HHBK.cpp" />
+    <ClCompile Include="NeoPixel.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties arduino.upload.port="COM3" VM.DebugVariablesWindow.ColumnVisibleVariableValueMax="0" VM.DebugVariablesWindow.ColumnVisibleVariableValueMin="0" VM.DebugVariablesWindow.ColumnVisibleVariableRefreshOn="1" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

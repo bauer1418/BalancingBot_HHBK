@@ -27,7 +27,7 @@
 	#include "Andi_Bibilothek_BalancingBot.h"
 	#include "Messenger_Enum.h"
 	#include "MPU6050_BalancingBot_HHBK.h"
-	
+
 	//Variablen
 	
 
@@ -36,7 +36,7 @@
 	//Zyklusdaten alle 20ms senden
 	void Zyklusdaten_senden()
 	{
-		if (Zeit_Takt_20ms()==true)
+		if (Allgemeine_Zeitfunktion.ZeitTakt_20ms()==true)
 		{
 			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);			//Mehrfach Senden starten
 			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());		//Aktueller KalmanWinkel senden
@@ -52,6 +52,7 @@
 	void EEPROM_lesen()
 	{
 		System_Einstellungen=Daten_aus_EEPROM_lesen();
+		EEPROM_Werte_aktiveren(System_Einstellungen);
 		cmdMessenger.sendCmd(cmd_Einstellungen_aus_EEPROM_lesen,1);
 	}
 	void EEPROM_speichern()
@@ -182,9 +183,12 @@
 			System_Einstellungen.PID_Regler_Winkel_D=D;
 			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
 			cmdMessenger.sendCmdArg(1);
-			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_P);
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_I);
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_D);
+		/*	cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKi());
-			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());*/
 
 		}
 		else if (Regler== 2)//Neue PID Werte für den Geschwindigkeitsregler festlegen und als Antwort zurücksenden
