@@ -18,9 +18,12 @@
 	struct Balancing_Bot_Einstellungen
 	{
 		int Werte_ueberschrieben;					//Anzahl der Überschreibvorgänge des EEPROMs
-		double PID_Regler_Winkel_P;					//P-Einstellung für Winkel-Regler
-		double PID_Regler_Winkel_I;					//I-Einstellung für Winkel-Regler
-		double PID_Regler_Winkel_D;					//D-Einstellung für Winkel-Regler
+		double PID_Regler_Winkel_Nah_P;				//P-Einstellung Nah für Winkel-Regler
+		double PID_Regler_Winkel_Nah_I;				//I-Einstellung Nah für Winkel-Regler
+		double PID_Regler_Winkel_Nah_D;				//D-Einstellung Nah für Winkel-Regler
+		double PID_Regler_Winkel_Fern_P;			//P-Einstellung Fern für Winkel-Regler
+		double PID_Regler_Winkel_Fern_I;			//I-Einstellung Fern für Winkel-Regler
+		double PID_Regler_Winkel_Fern_D;			//D-Einstellung Fern für Winkel-Regler
 		double PID_Regler_Geschwindigkeit_P;		//P-Einstellung für Geschwindigkeits-Regler
 		double PID_Regler_Geschwindigkeit_I;		//I-Einstellung für Geschwindigkeits-Regler
 		double PID_Regler_Geschwindigkeit_D;		//D-Einstellung für Geschwindigkeits-Regler
@@ -54,6 +57,7 @@
 	void Pin_Setup();
 	bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt);
 	void test();
+	void Motoren_EINAUS_Schalten(bool AN_AUS);
 	void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin);
 	void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step);
 	void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links);
@@ -119,8 +123,8 @@
 		CmdMessenger cmdMessenger = CmdMessenger(Serial);
 	#include "Andi_Stepper_Motor.h"
 		//Stepper Motoren initialisieren	
-		Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
-		Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+		Stepper_Motor Motor_Links(false,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+		Stepper_Motor Motor_Rechts(true,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 	#include "EEPROM.h"
 		//Einstellungensdatei erstellen
 		Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
@@ -146,7 +150,7 @@
 	Balancing_Bot_Einstellungen Daten_aus_EEPROM_lesen()
 	{
 		Balancing_Bot_Einstellungen EEPROM_Daten;
-		EEPROM.get(0,EEPROM_Daten);
+		EEPROM_Daten = EEPROM.get(0,EEPROM_Daten);
 		return EEPROM_Daten;
 	}
 
@@ -155,9 +159,12 @@
 void Einstellungen_mit_Standart_Werten_beschreiben()
 {
 	System_Einstellungen.Werte_ueberschrieben=0;					//Standartwert wie oft das EEPROM überschrieben wurde
-	System_Einstellungen.PID_Regler_Winkel_P=0;						//P-Einstellung für Winkel-Regler
-	System_Einstellungen.PID_Regler_Winkel_I=0;						//I-Einstellung für Winkel-Regler
-	System_Einstellungen.PID_Regler_Winkel_D=0;						//D-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Nah_P=0;						//P-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Nah_I=0;						//I-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Nah_D=0;						//D-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Fern_P = 0;						//P-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Fern_I = 0;						//I-Einstellung für Winkel-Regler
+	System_Einstellungen.PID_Regler_Winkel_Fern_D = 0;						//D-Einstellung für Winkel-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_P=0;			//P-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_I=0;			//I-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_D=0;			//D-Einstellung für Geschwindigkeits-Regler
@@ -188,7 +195,7 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	Offset_gyroy(EEPROM_Daten.MPU_Offset_GyroY);
 	Offset_gyroz(EEPROM_Daten.MPU_Offset_GyroZ);
 
-	PID_Regler_Winkel.SetTunings(EEPROM_Daten.PID_Regler_Winkel_P,EEPROM_Daten.PID_Regler_Winkel_I,EEPROM_Daten.PID_Regler_Winkel_D);
+	PID_Regler_Winkel.SetTunings(EEPROM_Daten.PID_Regler_Winkel_Nah_P,EEPROM_Daten.PID_Regler_Winkel_Nah_I,EEPROM_Daten.PID_Regler_Winkel_Nah_D);
 	PID_Regler_Winkel.SetOutputLimits(EEPROM_Daten.PID_Regler_Winkel_Min,EEPROM_Daten.PID_Regler_Winkel_Max);
 	PID_Regler_Geschwindigkeit.SetTunings(EEPROM_Daten.PID_Regler_Geschwindigkeit_P,EEPROM_Daten.PID_Regler_Geschwindigkeit_I,EEPROM_Daten.PID_Regler_Geschwindigkeit_D);
 	PID_Regler_Geschwindigkeit.SetOutputLimits(EEPROM_Daten.PID_Regler_Geschwindigkeit_Min,EEPROM_Daten.PID_Regler_Geschwindigkeit_Max);
@@ -232,7 +239,19 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 
 	}
 
-
+	void Motoren_EINAUS_Schalten(bool AN_AUS)
+	{
+		if (AN_AUS==true)
+		{
+			Motor_Links.Aktiv_Schalten(true);
+			Motor_Rechts.Aktiv_Schalten(true);
+		}
+		else
+		{
+			Motor_Links.Aktiv_Schalten(false);
+			Motor_Rechts.Aktiv_Schalten(false);
+		}
+	}
 
 
 	//Lüftersteuerung über eine Temperatur mit Schreiben des analogen PWM Ausgangs
@@ -266,9 +285,10 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 			PORTB=PORTB&B10011111;*/
 			digitalWrite(Pin_Step_Rechts,true);
 			digitalWrite(Pin_Step_Links,true);
-			delayMicroseconds(2500);
+			delayMicroseconds(10);
 			digitalWrite(Pin_Step_Rechts,false);
 			digitalWrite(Pin_Step_Links,false);
+
 		}
 		else if (MotorLinks_Step==false && MotorRechts_Step==true)//Rechts einen Schritt
 		{
@@ -276,8 +296,9 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 			//delayMicroseconds(DRV8825_Step_Pause);
 			//PORTB=PORTB&B10111111;
 			digitalWrite(Pin_Step_Rechts,true);
-			delayMicroseconds(2500);
+			delayMicroseconds(10);
 			digitalWrite(Pin_Step_Rechts,false);
+
 		}
 		else if (MotorLinks_Step==true && MotorRechts_Step==false)//Links einen Schritt
 		{
@@ -285,8 +306,9 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 			delayMicroseconds(DRV8825_Step_Pause);
 			PORTB=PORTB&B11011111;*/
 			digitalWrite(Pin_Step_Links,true);
-			delayMicroseconds(2500);
+			delayMicroseconds(10);
 			digitalWrite(Pin_Step_Links,false);
+
 
 		}
 		else if (MotorLinks_Step==false && MotorRechts_Step==false)//beide keinen Schritt

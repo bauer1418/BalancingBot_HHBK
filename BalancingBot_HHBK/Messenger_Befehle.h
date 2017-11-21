@@ -38,13 +38,17 @@
 	{
 		if (Allgemeine_Zeitfunktion.ZeitTakt_20ms()==true)
 		{
-			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);			//Mehrfach Senden starten
-			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());		//Aktueller KalmanWinkel senden
-			cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);		//PID Winkel Ausgangswert				
-			cmdMessenger.sendCmdArg(MotorenEINAUS);				//Aktueller MotorEINAUS Status senden
-			cmdMessenger.sendCmdArg(Zykluszeit);				//Zykluszeit senden
-			cmdMessenger.sendCmdArg(Status);					//Aktuellen Systemstatus senden
-			cmdMessenger.sendCmdEnd();							//Senden beenden
+			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);					//Mehrfach Senden starten
+			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());				//Aktueller KalmanWinkel senden
+			cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);				//PID Winkel Ausgangswert				
+			cmdMessenger.sendCmdArg(MotorenEINAUS);						//Aktueller MotorEINAUS Status senden
+			cmdMessenger.sendCmdArg(Zykluszeit);						//Zykluszeit senden
+			cmdMessenger.sendCmdArg(Status);							//Aktuellen Systemstatus senden
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_P_Wert());	//P-Wert senden Winkel
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_I_Wert());	//I-Wert senden Winkel
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_D_Wert());	//D-Wert senden Winkel
+			cmdMessenger.sendCmdArg(Sollwert_PID_Winkel);				//Sollwert für Winkelregler senden
+			cmdMessenger.sendCmdEnd();									//Senden beenden
 		}
 		//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
 	}
@@ -53,10 +57,11 @@
 	{
 		System_Einstellungen=Daten_aus_EEPROM_lesen();
 		EEPROM_Werte_aktiveren(System_Einstellungen);
-		cmdMessenger.sendCmd(cmd_Einstellungen_aus_EEPROM_lesen,1);
+		cmdMessenger.sendCmd(cmd_Einstellungen_aus_EEPROM_lesen,System_Einstellungen.Werte_ueberschrieben);
 	}
 	void EEPROM_speichern()
 	{
+		System_Einstellungen.Werte_ueberschrieben = 5;
 		EEPROM.put(0,System_Einstellungen);
 		cmdMessenger.sendCmd(cmd_Einstellungen_ins_EEPROM_speichern,F("Daten gespeichert"));
 	}
@@ -70,6 +75,7 @@
 	void Fehlermeldung()
 	{
 		cmdMessenger.sendCmd(cmd_Fehlermeldung,Fehlerspeicher);
+		
 	}
 	void Akkustand_Prozent()
 	{
@@ -154,16 +160,7 @@
 	void MotorenSchalten()
 	{
 		MotorenEINAUS=cmdMessenger.readBoolArg();
-		if (MotorenEINAUS==true)
-		{
-			Motor_Links.Aktiv_Schalten(true);
-			Motor_Rechts.Aktiv_Schalten(true);
-		}
-		else
-		{
-			Motor_Links.Aktiv_Schalten(false);
-			Motor_Rechts.Aktiv_Schalten(false);
-		}
+		Motoren_EINAUS_Schalten(MotorenEINAUS);
 		cmdMessenger.sendCmd(cmd_MotorenEINAUS,MotorenEINAUS);
 	}
 	void P_I_D_Werte()
@@ -177,18 +174,18 @@
 
 		if (Regler== 1)//Neue PID Werte für den Winkelregler festlegen und als Antwort zurücksenden
 		{
-			PID_Regler_Winkel.SetTunings(P,I,D);
-			System_Einstellungen.PID_Regler_Winkel_P=P;
-			System_Einstellungen.PID_Regler_Winkel_I=I;
-			System_Einstellungen.PID_Regler_Winkel_D=D;
+			//PID_Regler_Winkel.SetTunings(P,I,D);
+			System_Einstellungen.PID_Regler_Winkel_Nah_P=P;
+			System_Einstellungen.PID_Regler_Winkel_Nah_I=I;
+			System_Einstellungen.PID_Regler_Winkel_Nah_D=D;
 			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
-			cmdMessenger.sendCmdArg(1);
-			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_P);
-			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_I);
-			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_D);
-		/*	cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
+			cmdMessenger.sendCmdArg(1);/*
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_P);
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_I);
+			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_D);*/
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKi());
-			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());*/
+			cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());
 
 		}
 		else if (Regler== 2)//Neue PID Werte für den Geschwindigkeitsregler festlegen und als Antwort zurücksenden
@@ -221,8 +218,26 @@
 			cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKd());
 
 		}
+			else if (Regler == 5)//Einstellung der Fernwerte für den Winkel Regler
+			{
 
-
+				//PID_Regler_Winkel.SetTunings(P, I, D);
+				System_Einstellungen.PID_Regler_Winkel_Fern_P = P;
+				System_Einstellungen.PID_Regler_Winkel_Fern_I = I;
+				System_Einstellungen.PID_Regler_Winkel_Fern_D = D;
+				cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
+				cmdMessenger.sendCmdArg(1);
+				/*
+				cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_P);
+				cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_I);
+				cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_D);*/
+				cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKp());
+				cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKi());
+				cmdMessenger.sendCmdArg(PID_Regler_Winkel.GetKd());
+			}
+			else if (Regler == 6)//Nur Anzeige der PID Werte für Geschwindigkeitsregler
+			{
+			}
 	}
 
 	//Setup Routine für die Serielle Komunikation mit dem cmdMessenger Library Arduino<->Steuerungssoftware

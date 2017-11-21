@@ -25,8 +25,6 @@ void setup()
 {
 	Pin_Setup();
 
-	analogWrite(Pin_Platinenluefter,207);//Platinenl�fter auf 80% stellen
-
 	Setup_cmdMessenger();
 
 	NeoPixel_Setup(25);
@@ -41,10 +39,11 @@ void setup()
 	}
 	PID_Regler_Winkel.SetControllerDirection(DIRECT);
 	PID_Regler_Winkel.SetMode(AUTOMATIC);
+	PID_Regler_Winkel.SetSampleTime(10);
 	PID_Regler_Winkel.SetOutputLimits(-120,120);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Sollwert_PID_Winkel=0.00;
-	Motor_Links.StepMode_setzen(Stepper_Motor::Vollschritt);
-	Motor_Rechts.StepMode_setzen(Stepper_Motor::Vollschritt);
+	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
+	Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
 	Statusmeldung();
 }
 
@@ -66,18 +65,41 @@ void loop()
 	//}
 	Zyklusdaten_senden();
 
-	///*if (MotorenEINAUS==true)
-	//	{*/
+	if (MotorenEINAUS==true)
+	{
+		analogWrite(Pin_Platinenluefter,80*255/100);
+
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelY();
+		if (Eingang_PID_Winkel>2 || Eingang_PID_Winkel<-2)
+		{
+			PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Fern_P, System_Einstellungen.PID_Regler_Winkel_Fern_I, System_Einstellungen.PID_Regler_Winkel_Fern_D);
+		/*	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
+			Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
+		*/}
+		else
+		{
+			PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
+		/*	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
+			Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
+		*/}
 		//PID-Regler ausf�hren
 		PID_Regler_Winkel.Compute();//PID-Regler f�r die Winkelsteuerung zyklisch ausf�hren
 		Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
-		
+	}
+	else
+	{
+		analogWrite(Pin_Platinenluefter,0);
+	}
 		//Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
 //}
 
-	Umkippschutz(20,GET_KalmanWinkelY());
+
+	if (Umkippschutz(40,GET_KalmanWinkelY())==true)
+	{
+		MotorenEINAUS=false;
+		Motoren_EINAUS_Schalten(MotorenEINAUS);
+	}
 
 	//PID_Regler_Geschwindigkeit.Compute();
 	Akkuueberwachung(6,7);

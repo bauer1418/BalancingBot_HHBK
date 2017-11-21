@@ -7,13 +7,18 @@ Public Class Form1
     Dim TransportLayer As SerialTransport
     Dim Messenger As CmdMessenger
     Dim Akkustand_Prozent As Double = 0.0
+    Dim Aufnhamestatus As Boolean = False
+    Dim Aufnhame_Dateiname As String
 
     'Zyklusdaten
     Dim Winkel, PIDOut As Double
     Dim Zykluszeit As Integer
     Dim Motorenstatus As Boolean
     Dim Systemstatus As Integer
-
+    Dim P_Wert As Double
+    Dim I_Wert As Double
+    Dim D_Wert As Double
+    Dim PID_Sollwert As Double
     Enum Befehle
 
         cmd_Statusmeldung           'Statusmeldungen z.B.: Setup beendet
@@ -86,8 +91,22 @@ Public Class Form1
                 AttachCallbacks()
                 AddHandler Messenger.NewLineReceived, AddressOf NewLineReceived
                 AddHandler Messenger.NewLineSent, AddressOf NewLineSent
-
+                bttCOMVerbinden.Text = "Port trennen"
                 Messenger.Connect()
+            Else
+                Try
+                    If rbbCOMStatus.Checked = True Then
+                        Messenger.Disconnect()
+                        Messenger.Dispose()
+                        TransportLayer.Dispose()
+                        rbbCOMStatus.Checked = False
+                        lbbCOMStatus.Text = "Status: COM getrennt"
+                        bttCOMVerbinden.Text = "Port verbinden"
+                    End If
+                Catch ex As Exception
+                    MsgBox("Fehler beim Schließen des COM Ports!" + vbNewLine + ex.ToString, vbCritical, "Fehler")
+                End Try
+
             End If
         Catch ex As Exception
             rbbCOMStatus.Checked = False
@@ -129,7 +148,7 @@ Public Class Form1
         Messenger.Attach(Befehle.cmd_Fahrbefehl_Kurve, AddressOf PID_Werte)
         Messenger.Attach(Befehle.cmd_Akku_Spannungen_senden, AddressOf Neue_Daten_Float)
         Messenger.Attach(Befehle.cmd_Einstellungen_ins_EEPROM_speichern, AddressOf Neue_Daten_String)
-        Messenger.Attach(Befehle.cmd_Einstellungen_aus_EEPROM_lesen, AddressOf PID_Werte)
+        Messenger.Attach(Befehle.cmd_Einstellungen_aus_EEPROM_lesen, AddressOf EEPROM_Lesen)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
@@ -181,7 +200,16 @@ Public Class Form1
         End If
         Zykluszeit = arguments.ReadUInt32Arg()
         Systemstatus = arguments.ReadInt32Arg()
-
+        P_Wert = arguments.ReadDoubleArg()
+        I_Wert = arguments.ReadDoubleArg()
+        D_Wert = arguments.ReadDoubleArg()
+        PID_Sollwert = arguments.ReadDoubleArg()
+        If Aufnhamestatus = True Then
+            Dim Daten_Aufnahme As String
+            Daten_Aufnahme = DateAndTime.Now.ToString + ";" + Winkel.ToString + ";" + PIDOut.ToString + ";" + Zykluszeit.ToString + ";" + Motorenstatus.ToString + ";" + Akkustand_Prozent.ToString + ";" + _
+                             P_Wert.ToString + ";" + I_Wert.ToString + ";" + D_Wert.ToString + ";" + PID_Sollwert.ToString + vbNewLine
+            My.Computer.FileSystem.WriteAllText(Aufnhame_Dateiname, Daten_Aufnahme, True)
+        End If
         lbbZyklusdaten.Text = ("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString("00.00") + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
 
     End Sub
@@ -232,7 +260,10 @@ Public Class Form1
         Dim P_Wert, I_Wert, D_Wert As Double
         Dim Text As String
         If Reglernummer = 1 Then
-            Text = "Dateneingabe Winkelregler"
+            Text = "Dateneingabe Winkelregler Nah"
+
+        ElseIf Reglernummer = 5 Then
+            Text = "Dateneingabe Winkelregler Fern"
         Else
             Text = "Dateneingabe Speedregler"
         End If
@@ -252,6 +283,10 @@ Public Class Form1
         End Try
     End Sub
 
+    Private Sub bttPIDFern_Click(sender As Object, e As EventArgs) Handles bttPIDFern.Click
+        PID_Werte_senden(5)
+    End Sub
+
     Private Sub bttMotorenEINAUS_Click(sender As Object, e As EventArgs) Handles bttMotorenEINAUS.Click
 
 
@@ -264,6 +299,22 @@ Public Class Form1
             MsgBox("Fehler bei Motoren Ein Aus Schalten", vbCritical, "Fehler")
         End Try
 
+    End Sub
+    Private Sub EEPROM_Lesen(ByVal arguments As ReceivedCommand)
+        MsgBox("Anzahl der Screibvorgänge auf dem EEPROM:" + arguments.ReadBinInt16Arg.ToString, vbInformation, "EEPROM Daten gelesen")
+
+    End Sub
+
+
+    Private Sub bttAufnahme_Click(sender As Object, e As EventArgs, Optional ByVal Dateiname As String = "PID Analyse ") Handles bttAufnahme.Click
+        If Aufnhamestatus = False Then
+            Aufnhame_Dateiname = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\" + Dateiname + DateAndTime.Now.ToString("dd.MM.yyyy HH.mm.ss") + ".txt"
+            bttAufnahme.BackColor = Color.Green
+            Aufnhamestatus = True
+        Else
+            bttAufnahme.BackColor = Color.Red
+            Aufnhamestatus = False
+        End If
     End Sub
 End Class
 

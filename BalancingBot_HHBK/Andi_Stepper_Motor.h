@@ -12,7 +12,7 @@
 		#include "WProgram.h"
 	#endif
 
-	#include "Andi_ZeitTakt_Funktionen.h"
+	//#include "Andi_ZeitTakt_Funktionen.h"
 
 	//Motoren
 	const int Steps_pro_Umdrehnung=200;		//Steps pro Umdrehung der Nema17 Motoren
@@ -174,6 +174,10 @@
 	{
 		double Steps_pro_Sekunde = Drehzahl*Steps_pro_Umdrehnung/60;
 		double Pausenzeit = 1/Steps_pro_Sekunde*1000*1000;
+		if (Pausenzeit<0)
+		{
+			Pausenzeit=Pausenzeit*-1;
+		}
 		return Pausenzeit;
 	}
 	//Zeitüberprüfung ob bereits die angegebende Pausenzeit abgelaufen ist
