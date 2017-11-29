@@ -32,7 +32,8 @@
 		cmd_Fahrbefehl_Kurve,		//Fahrbefehl um eine Kurve zu fahren Parameter 2 bestimmt Geschwindigkeit 3+4 sind % Angaben wie schnell die Räder links und rechts laufen sollen.
 		cmd_Einstellungen_ins_EEPROM_speichern, //Aktuelle Einstellungen ins EEPROM speichern
         cmd_Einstellungen_aus_EEPROM_lesen,      //Einstellungen aus dem EEPROM lesen und per Serial senden
-        cmd_Akku_Spannungen_senden      //Beide Spannungen senden
+        cmd_Akku_Spannungen_senden,      //Beide Spannungen senden
+		cmd_PID_Sampletime			//Sampletime der PID Regler verstellen 1=Winkel 2=Speed
 	
 
 	};

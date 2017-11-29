@@ -165,6 +165,7 @@ Partial Class Form1
         '
         'bttPIDFern
         '
+        Me.bttPIDFern.Enabled = False
         Me.bttPIDFern.Location = New System.Drawing.Point(105, 155)
         Me.bttPIDFern.Name = "bttPIDFern"
         Me.bttPIDFern.Size = New System.Drawing.Size(88, 39)
@@ -186,7 +187,7 @@ Partial Class Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(503, 215)
+        Me.ClientSize = New System.Drawing.Size(509, 205)
         Me.Controls.Add(Me.bttAufnahme)
         Me.Controls.Add(Me.bttPIDFern)
         Me.Controls.Add(Me.LbbAkku)

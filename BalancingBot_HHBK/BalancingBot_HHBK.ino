@@ -39,8 +39,8 @@ void setup()
 	}
 	PID_Regler_Winkel.SetControllerDirection(DIRECT);
 	PID_Regler_Winkel.SetMode(AUTOMATIC);
-	PID_Regler_Winkel.SetSampleTime(10);
-	PID_Regler_Winkel.SetOutputLimits(-120,120);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	PID_Regler_Winkel.SetSampleTime(System_Einstellungen.PID_Winkel_Sampletime);
+	PID_Regler_Winkel.SetOutputLimits(-100,100);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Sollwert_PID_Winkel=0.00;
 	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
 	Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
@@ -71,18 +71,18 @@ void loop()
 
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelY();
-		if (Eingang_PID_Winkel>2 || Eingang_PID_Winkel<-2)
+		if (Eingang_PID_Winkel>5+Sollwert_PID_Winkel || Eingang_PID_Winkel< Sollwert_PID_Winkel-5)
 		{
-			PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Fern_P, System_Einstellungen.PID_Regler_Winkel_Fern_I, System_Einstellungen.PID_Regler_Winkel_Fern_D);
-		/*	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
+		//	PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Fern_P, System_Einstellungen.PID_Regler_Winkel_Fern_I, System_Einstellungen.PID_Regler_Winkel_Fern_D);
+			Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
 			Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
-		*/}
+		}
 		else
 		{
-			PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
-		/*	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
-			Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
-		*/}
+			//PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
+			Motor_Links.StepMode_setzen(Stepper_Motor::Viertelschritt);
+			Motor_Rechts.StepMode_setzen(Stepper_Motor::Viertelschritt);
+		}
 		//PID-Regler ausf�hren
 		PID_Regler_Winkel.Compute();//PID-Regler f�r die Winkelsteuerung zyklisch ausf�hren
 		Motoren_Steuerung(Ausgang_PID_Winkel,100,100);

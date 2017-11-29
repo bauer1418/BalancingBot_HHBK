@@ -42,6 +42,7 @@ Public Class Form1
         cmd_Einstellungen_ins_EEPROM_speichern  'Aktuelle Einstellungen ins EEPROM speichern
         cmd_Einstellungen_aus_EEPROM_lesen      'Einstellungen aus dem EEPROM lesen und per Serial senden
         cmd_Akku_Spannungen_senden      'Beide Spannungen senden
+        cmd_PID_Sampletime       'Sampletime der Regler verstellen 1=Winkel 2=Speed
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing

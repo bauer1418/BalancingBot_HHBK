@@ -41,6 +41,8 @@
 		double MPU_Offset_GyroX;					//Offsetwert für MPU GyroX
 		double MPU_Offset_GyroY;					//Offsetwert für MPU GyroY
 		double MPU_Offset_GyroZ;					//Offsetwert für MPU GyroZ
+		int PID_Winkel_Sampletime;					//Sampletime für den Winkelregler
+		int PID_Geschwindigkeit_Sampletime;			//Sampletime für den Speed Regler
 	};
 
 	//Fehler und Statusüberwachung
@@ -182,6 +184,8 @@ void Einstellungen_mit_Standart_Werten_beschreiben()
 	System_Einstellungen.MPU_Offset_GyroX=0;						//Offsetwert für MPU GyroX
 	System_Einstellungen.MPU_Offset_GyroY=0;						//Offsetwert für MPU GyroY
 	System_Einstellungen.MPU_Offset_GyroZ=0;						//Offsetwert für MPU GyroZ
+	System_Einstellungen.PID_Winkel_Sampletime = 10;				//Sampletime Winkelregler
+	System_Einstellungen.PID_Geschwindigkeit_Sampletime = 10;		//Sampletime Speedregler
 
 
 }
@@ -325,7 +329,10 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	//Prozent_Rechts/Links entspricht dem Sollwert für den jewaligen Motor in Prozent 100% => Sollwert==Motorwert
 	void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links)
 	{
-		Ausgangsregister_schreiben(Motor_Links.Step(Drehzahl,Prozent_Links),Motor_Rechts.Step(Drehzahl,Prozent_Rechts));
+		//if (Sollwert_PID_Winkel+0.9 <Eingang_PID_Winkel || Sollwert_PID_Winkel-0.9 > Eingang_PID_Winkel)
+		
+			Ausgangsregister_schreiben(Motor_Links.Step(Drehzahl,Prozent_Links),Motor_Rechts.Step(Drehzahl,Prozent_Rechts));
+		
 		//double Drehzahl_Rechts= Versatz_Rechner(Drehzahl,Versatz_Rechts);
 		//double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
 		//double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);

@@ -22,6 +22,7 @@
 	void MotorenSchalten();
 	void P_I_D_Werte();
 	void Setup_cmdMessenger();
+	void Akkus_Spannungen_senden();
 	
 	//Include-Anweisungen
 	#include "Andi_Bibilothek_BalancingBot.h"
@@ -38,17 +39,17 @@
 	{
 		if (Allgemeine_Zeitfunktion.ZeitTakt_20ms()==true)
 		{
-			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);					//Mehrfach Senden starten
-			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());				//Aktueller KalmanWinkel senden
-			cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);				//PID Winkel Ausgangswert				
-			cmdMessenger.sendCmdArg(MotorenEINAUS);						//Aktueller MotorEINAUS Status senden
-			cmdMessenger.sendCmdArg(Zykluszeit);						//Zykluszeit senden
-			cmdMessenger.sendCmdArg(Status);							//Aktuellen Systemstatus senden
+			cmdMessenger.sendCmdStart(cmd_Zyklusdaten);						//Mehrfach Senden starten
+			cmdMessenger.sendCmdArg(GET_KalmanWinkelY());					//Aktueller KalmanWinkel senden
+			cmdMessenger.sendCmdArg(Ausgang_PID_Winkel);					//PID Winkel Ausgangswert				
+			cmdMessenger.sendCmdArg(MotorenEINAUS);							//Aktueller MotorEINAUS Status senden
+			cmdMessenger.sendCmdArg(Zykluszeit);							//Zykluszeit senden
+			cmdMessenger.sendCmdArg(Status);								//Aktuellen Systemstatus senden
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_P_Wert());	//P-Wert senden Winkel
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_I_Wert());	//I-Wert senden Winkel
 			cmdMessenger.sendCmdArg(PID_Regler_Winkel.Get_PID_D_Wert());	//D-Wert senden Winkel
-			cmdMessenger.sendCmdArg(Sollwert_PID_Winkel);				//Sollwert für Winkelregler senden
-			cmdMessenger.sendCmdEnd();									//Senden beenden
+			cmdMessenger.sendCmdArg(Sollwert_PID_Winkel);					//Sollwert für Winkelregler senden
+			cmdMessenger.sendCmdEnd();										//Senden beenden
 		}
 		//Typische Zyklusdaten Kalmanwinkel PID Ausgang P I D Teile MotorEINAUS Zykluszeit
 	}
@@ -178,6 +179,7 @@
 			System_Einstellungen.PID_Regler_Winkel_Nah_P=P;
 			System_Einstellungen.PID_Regler_Winkel_Nah_I=I;
 			System_Einstellungen.PID_Regler_Winkel_Nah_D=D;
+			PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
 			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
 			cmdMessenger.sendCmdArg(1);/*
 			cmdMessenger.sendCmdArg(System_Einstellungen.PID_Regler_Winkel_Nah_P);
@@ -240,6 +242,26 @@
 			}
 	}
 
+	void Akkus_Spannungen_senden()
+	{
+		cmdMessenger.sendCmdStart(cmd_Akku_Spannungen_senden);
+		cmdMessenger.sendCmdArg(Akkuspannung1);
+		cmdMessenger.sendCmdArg(Akkuspannung2);
+		cmdMessenger.sendCmdArg(AkkuSpannungGesamt);
+		cmdMessenger.sendCmdEnd();
+	}
+
+	//Sampletimeeinstellung der PID Regler 1=Winkel 2=Speed
+	void PID_Sampletime()
+	{
+		byte Regler = cmdMessenger.readInt16Arg();//1=Winkelregler ändern 2=Speedregler ändern
+		if (Regler==1)
+		{
+			System_Einstellungen.PID_Winkel_Sampletime = cmdMessenger.readInt16Arg();
+			PID_Regler_Winkel.SetSampleTime(System_Einstellungen.PID_Winkel_Sampletime);
+		}
+
+	}
 	//Setup Routine für die Serielle Komunikation mit dem cmdMessenger Library Arduino<->Steuerungssoftware
 	void Setup_cmdMessenger()
 	{
@@ -259,7 +281,8 @@
 		cmdMessenger.attach(cmd_P_I_D_Werte,P_I_D_Werte);
 		cmdMessenger.attach(cmd_Einstellungen_aus_EEPROM_lesen,EEPROM_lesen);
 		cmdMessenger.attach(cmd_Einstellungen_ins_EEPROM_speichern,EEPROM_speichern);
-
+		cmdMessenger.attach(cmd_Akku_Spannungen_senden,Akkus_Spannungen_senden);
+		cmdMessenger.attach(cmd_PID_Sampletime, PID_Sampletime);
 		cmdMessenger.printLfCr();//Nach jeder Message eine neue Zeile beginnen
 	}
 #endif // !_Messenger_Befehle
