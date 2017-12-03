@@ -135,7 +135,7 @@
 	{
 		if (Private_Motor_aktiv==true)
 		{
-			if (Drehzahl>0)
+			if (Drehzahl>0.0)
 			{
 				Richtung_einstellen(Vorwaerts);
 			}
