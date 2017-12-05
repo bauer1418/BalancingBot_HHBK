@@ -151,8 +151,9 @@
 
 	void PID_Winkel_Sollwert()
 	{
-		Sollwert_PID_Winkel=cmdMessenger.readDoubleArg();
-		cmdMessenger.sendCmd(cmd_PID_Winkel_Sollwert,Sollwert_PID_Winkel);
+		Sollwert_Steuerung=cmdMessenger.readDoubleArg();
+		//Sollwert_PID_Winkel=cmdMessenger.readDoubleArg();
+		cmdMessenger.sendCmd(cmd_PID_Winkel_Sollwert, Sollwert_Steuerung);
 	}
 	void MPU_Temperatur()
 	{

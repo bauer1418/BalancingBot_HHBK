@@ -6,7 +6,8 @@
 
 
 unsigned long Zykluszeit=0;				//akutelle Zykluszeit
-bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
+bool volatile MotorenEINAUS = false;				//Motoren Ein Aus Schalter 
+volatile double Setpoint_bias = 0.0;
 
 //Ben�tigte Bibilotheken
 #include <Adafruit_NeoPixel.h>
@@ -16,13 +17,11 @@ bool MotorenEINAUS = false;				//Motoren Ein Aus Schalter
 #include "Andi_ZeitTakt_Funktionen.h"
 
 
-
-
-
-
  //the setup function runs once when you press reset or power the board
 void setup() 
 {
+	Interrupt_Setup();
+
 	Pin_Setup();
 
 	Setup_cmdMessenger();
@@ -42,8 +41,8 @@ void setup()
 	PID_Regler_Winkel.SetSampleTime(System_Einstellungen.PID_Winkel_Sampletime);
 	PID_Regler_Winkel.SetOutputLimits(-100,100);//!!!!!!!!!!!!!!!!!!!!!!!!!!HIER IST DER FEHLER MIT PID AUSGANG NUR 0-255!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Sollwert_PID_Winkel=0.00;
-	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
-	Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
+	Motor_Links.StepMode_setzen(Stepper_Motor::Achtelschritt);
+	Motor_Rechts.StepMode_setzen(Stepper_Motor::Achtelschritt);
 	Statusmeldung();
 }
 
@@ -71,28 +70,43 @@ void loop()
 
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelY();
-		if (Eingang_PID_Winkel>5+Sollwert_PID_Winkel || Eingang_PID_Winkel< Sollwert_PID_Winkel-5)
-		{
-		//	PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Fern_P, System_Einstellungen.PID_Regler_Winkel_Fern_I, System_Einstellungen.PID_Regler_Winkel_Fern_D);
-			Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
-			Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
-		}
-		else
-		{
-			//PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
-			Motor_Links.StepMode_setzen(Stepper_Motor::Viertelschritt);
-			Motor_Rechts.StepMode_setzen(Stepper_Motor::Viertelschritt);
-		}
+		//if (Eingang_PID_Winkel>5+Sollwert_PID_Winkel || Eingang_PID_Winkel< Sollwert_PID_Winkel-5)
+		//{
+		////	PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Fern_P, System_Einstellungen.PID_Regler_Winkel_Fern_I, System_Einstellungen.PID_Regler_Winkel_Fern_D);
+		//	Motor_Links.StepMode_setzen(Stepper_Motor::Halbschritt);
+		//	Motor_Rechts.StepMode_setzen(Stepper_Motor::Halbschritt);
+		//}
+		//else
+		//{
+		//	//PID_Regler_Winkel.SetTunings(System_Einstellungen.PID_Regler_Winkel_Nah_P, System_Einstellungen.PID_Regler_Winkel_Nah_I, System_Einstellungen.PID_Regler_Winkel_Nah_D);
+		//	Motor_Links.StepMode_setzen(Stepper_Motor::Viertelschritt);
+		//	Motor_Rechts.StepMode_setzen(Stepper_Motor::Viertelschritt);
+		/*}*/
 		//PID-Regler ausf�hren
+
+
+
+		Sollwert_PID_Winkel = Sollwert_Steuerung + Setpoint_bias;
+		
 		PID_Regler_Winkel.Compute();//PID-Regler f�r die Winkelsteuerung zyklisch ausf�hren
-		Motoren_Steuerung(Ausgang_PID_Winkel,100,100);
+		Motor_Rechts.Drehzahl_festlegen(Ausgang_PID_Winkel, 100);
+		Motor_Links.Drehzahl_festlegen(Ausgang_PID_Winkel, 100);
+		/*if (Sollwert_Steuerung == 0.0 && Ausgang_PID_Winkel != 0.0)
+		{
+			if (Ausgang_PID_Winkel > 0.0)
+			{
+				Setpoint_bias -= 0.00015;
+			}
+			else
+			{
+				Setpoint_bias += 0.00015;
+			}
+		}*/
 	}
 	else
 	{
 		analogWrite(Pin_Platinenluefter,0);
 	}
-		//Ausgangsregister_schreiben(Motor_Links.Step(100,100),Motor_Rechts.Step(100,100));
-//}
 
 
 	if (Umkippschutz(40,GET_KalmanWinkelY())==true)
@@ -107,4 +121,33 @@ void loop()
 	//cmdMessenger.sendCmd(cmd_Anzeige_Text,analogRead(Akkuspannung2));
 
 	cmdMessenger.feedinSerialData();//cmdMessenger Datenauslesen und Callbacks ausl�sen
+}
+
+
+long ISR_test = 0;
+
+
+
+//Interrupt Routine zur Stepansteuerung der Motoren
+ISR(TIMER2_COMPA_vect)
+{
+	bool Step_Rechts = Motor_Rechts.Step(); 
+	bool Step_Links = Motor_Links.Step();
+
+		if (Ausgang_PID_Winkel > 0.0)
+		{
+			digitalWrite(7, HIGH);
+			digitalWrite(8, LOW);
+		}
+		else
+		{
+			digitalWrite(8, HIGH);
+			digitalWrite(7, LOW);
+		}		
+
+	Ausgangsregister_schreiben(Step_Links, Step_Rechts);
+		
+	
+
+	
 }
