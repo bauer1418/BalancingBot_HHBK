@@ -217,7 +217,7 @@
 		  i2cData[2] = 0x00; // Set Gyro Full Scale Range to ±250deg/s
 		  i2cData[3] = 0x00; // Set Accelerometer Full Scale Range to ±2g
 		  while (i2cWrite(0x19, i2cData, 4, false)); // Write to all four registers at once
-		  while (i2cWrite(0x1A, 0x06, false));//DLPF Lowpassfilter Motorvibrationen siehe: http://meineweltinmeinemkopf.blogspot.de/2013/05/dlpf-einstellen-fur-den-mpu6050.html 
+		  while (i2cWrite(0x1A, 0x04, false));//DLPF Lowpassfilter Motorvibrationen siehe: http://meineweltinmeinemkopf.blogspot.de/2013/05/dlpf-einstellen-fur-den-mpu6050.html 
 		  while (i2cWrite(0x6B, 0x01, true)); // PLL with X axis gyroscope reference and disable sleep mode
   
 		  while (i2cRead(0x75, i2cData, 1));

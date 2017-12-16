@@ -14,7 +14,14 @@
 			#include "WProgram.h"
 		#endif
 	
-	//Im EEPROM gespeicherte Einstellungen
+//Various settings
+float pid_p_gain = 15;                                       //Gain setting for the P-controller (15)
+float pid_i_gain = 1.5;                                      //Gain setting for the I-controller (1.5)
+float pid_d_gain = 30;                                       //Gain setting for the D-controller (30)
+float turning_speed = 30;                                    //Turning speed (20)
+float max_target_speed = 150;                                //Max target speed (100)
+
+//Im EEPROM gespeicherte Einstellungen
 	struct Balancing_Bot_Einstellungen
 	{
 		int Werte_ueberschrieben;					//Anzahl der Überschreibvorgänge des EEPROMs
@@ -62,14 +69,10 @@
 	void Motoren_EINAUS_Schalten(bool AN_AUS);
 	void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin);
 	void Ausgangsregister_schreiben(bool MotorLinks_Step, bool MotorRechts_Step);
-	void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links);
 	void Fehlerauswertung();
 	double Spannungsteiler (double R1, double R2, int AnalogEingangsPin);
 	double Akku_Messbereich_Berechnen(double AkkuMin, double AkkuMax);
 	bool Akkuueberwachung (int AkkuPin1, int AkkuPin2);
-	bool Zeit_Takt_20ms();
-	bool Zeit_Takt_100ms();
-	bool Zeit_Takt_1s();
 	unsigned long Zykluszeit_Messung();
 	bool Umkippschutz(int MaxWinkel, double EingangsWinkel);
 
@@ -116,9 +119,10 @@
 	#include "Messenger_Enum.h"
 	#include <PID_v1_Andi.h>
 		//PID-Regler
-		double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
+		volatile double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
 		double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
-		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10l,0,0,DIRECT);//PID-Regler für Wickelsteuerung
+		double Sollwert_Steuerung = 0.0; //Sollwert aus der Serial Komunikation
+		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 1,0,0,DIRECT);//PID-Regler für Wickelsteuerung
 		PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
 	#include <CmdMessenger.h>
 		//CmdMessenger Starten
@@ -204,8 +208,8 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	PID_Regler_Geschwindigkeit.SetTunings(EEPROM_Daten.PID_Regler_Geschwindigkeit_P,EEPROM_Daten.PID_Regler_Geschwindigkeit_I,EEPROM_Daten.PID_Regler_Geschwindigkeit_D);
 	PID_Regler_Geschwindigkeit.SetOutputLimits(EEPROM_Daten.PID_Regler_Geschwindigkeit_Min,EEPROM_Daten.PID_Regler_Geschwindigkeit_Max);
 
-	Motor_Links.StepMode_setzen(EEPROM_Daten.Schrittmodus);
-	Motor_Rechts.StepMode_setzen(EEPROM_Daten.Schrittmodus);
+	//Motor_Links.StepMode_setzen(EEPROM_Daten.Schrittmodus);
+	//Motor_Rechts.StepMode_setzen(EEPROM_Daten.Schrittmodus);
 
 	//NeoPixel_Setup(EEPROM_Daten.NeoPixelRing_Helligkeit);
 
@@ -213,6 +217,19 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	analogWrite(Pin_Gehaeuseluefter,EEPROM_Daten.Gehaeuseluefter_Sollwert);
 
 }
+	//Interrupt auf Basis von Timer2 intialisieren
+	void Interrupt_Setup()
+	{
+		TCCR2A = 0;					//TCCR2A Register zurücksetzen
+		TCCR2B = 0;					//TCCR2ABRegister zurücksetzen
+		TIMSK2 |= (1 << OCIE2A);	//Interruppt Enable Bit im TIMSK2 setzen (OCIE2A)
+		TCCR2B |= (1 << CS21);		//Vorteiler(TRCC2B) auf 8(CS21) stellen
+		OCR2A = 119;				//Output compare Register einstellen für alle 60µs Formel zum errechnern:
+									//Registerwert=20µs/(1s/16Mhz/8)-1=>39
+		TCCR2A |= (1 << WGM21);		//Aktiviere den CTC Modus (clear timer on compare)
+		//Erklärung CTC Modus siehe https://www.heise.de/developer/artikel/Timer-Counter-und-Interrupts-3273309.html
+	}
+
 	//Pin Setup Routine um alle Pins in den Richtigen Pin Mode zuversetzen und Passendere Namen zugeben 
 	void Pin_Setup()
 	{
@@ -284,9 +301,9 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	{
 		if (MotorLinks_Step==true && MotorRechts_Step==true)//beide einen Schritt
 		{
-			/*PORTB=PORTB|B01100000;
+			/*PORTB=PORTB|0b01100000;
 			delayMicroseconds(DRV8825_Step_Pause);
-			PORTB=PORTB&B10011111;*/
+			PORTB=PORTB&0b10011111;*/
 			digitalWrite(Pin_Step_Rechts,true);
 			digitalWrite(Pin_Step_Links,true);
 			delayMicroseconds(10);
@@ -296,9 +313,9 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 		}
 		else if (MotorLinks_Step==false && MotorRechts_Step==true)//Rechts einen Schritt
 		{
-			//PORTB=PORTB|B01000000;
+			//PORTB=PORTB|0b01000000;
 			//delayMicroseconds(DRV8825_Step_Pause);
-			//PORTB=PORTB&B10111111;
+			//PORTB=PORTB&0b10111111;
 			digitalWrite(Pin_Step_Rechts,true);
 			delayMicroseconds(10);
 			digitalWrite(Pin_Step_Rechts,false);
@@ -306,39 +323,15 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 		}
 		else if (MotorLinks_Step==true && MotorRechts_Step==false)//Links einen Schritt
 		{
-			/*PORTB=PORTB|B00100000;
-			delayMicroseconds(DRV8825_Step_Pause);
-			PORTB=PORTB&B11011111;*/
+			//PORTB=PORTB|0b00100000;
+			////delayMicroseconds(DRV8825_Step_Pause);
+			//PORTB=PORTB&0b11011111;
 			digitalWrite(Pin_Step_Links,true);
 			delayMicroseconds(10);
 			digitalWrite(Pin_Step_Links,false);
 
 
 		}
-		else if (MotorLinks_Step==false && MotorRechts_Step==false)//beide keinen Schritt
-		{
-			/*PORTB=PORTB&B10011111;*/
-			digitalWrite(Pin_Step_Rechts,false);
-			digitalWrite(Pin_Step_Links,false);
-		}
-
-	}
-
-	//Unterprogramm zur Motorensteuerung
-	//Drehzahl ist benötigte Drehzahl für Balancing
-	//Prozent_Rechts/Links entspricht dem Sollwert für den jewaligen Motor in Prozent 100% => Sollwert==Motorwert
-	void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links)
-	{
-		//if (Sollwert_PID_Winkel+0.9 <Eingang_PID_Winkel || Sollwert_PID_Winkel-0.9 > Eingang_PID_Winkel)
-		
-			Ausgangsregister_schreiben(Motor_Links.Step(Drehzahl,Prozent_Links),Motor_Rechts.Step(Drehzahl,Prozent_Rechts));
-		
-		//double Drehzahl_Rechts= Versatz_Rechner(Drehzahl,Versatz_Rechts);
-		//double Drehzahl_Links= Versatz_Rechner(Drehzahl,Versatz_Links);
-		//double Pausenzeit_Links=Pausenzeit_Rechner(Drehzahl_Links);
-		//double Pausenzeit_Rechts=Pausenzeit_Rechner(Drehzahl_Rechts);
-		//Ausgangsregister_schreiben(Schalt_Zeitpunkt(Pausenzeit_Links,letzer_Step_Links),Schalt_Zeitpunkt(Pausenzeit_Rechts,letzer_Step_Rechts));
-
 	}
 
 	//Fehlerauswertung
@@ -351,12 +344,6 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	double Spannungsteiler (double R1, double R2, int AnalogEingangsPin)
 	
 	{
-		//double Strom=0.00;
-		//double Spannung=-70.00;
-		//pinMode(AnalogEingangsPin, INPUT);
-		//Strom=(analogRead(AnalogEingangsPin)*5.00/1024.00)/R1;
-		//Spannung=(R1+R2)*Strom;
-		//return Spannung;
 		double Teiler=R2/(R1+R2);
 		pinMode(AnalogEingangsPin, INPUT);
 		double Eingang=analogRead(AnalogEingangsPin);
