@@ -13,8 +13,8 @@
 		#else
 			#include "WProgram.h"
 		#endif
-	
-	//Im EEPROM gespeicherte Einstellungen
+
+//Im EEPROM gespeicherte Einstellungen
 	struct Balancing_Bot_Einstellungen
 	{
 		int Werte_ueberschrieben;					//Anzahl der Überschreibvorgänge des EEPROMs
@@ -112,18 +112,18 @@
 	#include "Messenger_Enum.h"
 	#include <PID_v1_Andi.h>
 		//PID-Regler
-		double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
+		volatile double Sollwert_PID_Winkel, Eingang_PID_Winkel, Ausgang_PID_Winkel;//PID Regler Werte
 		double Sollwert_PID_Geschwindigkeit, Eingang_PID_Geschwindigkeit, Ausgang_PID_Geschwindigkeit;//PID Regler Werte für Geschwindigkeitsregler
 		double Sollwert_Steuerung = 0.0; //Sollwert aus der Serial Komunikation
-		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 10l,0,0,DIRECT);//PID-Regler für Wickelsteuerung
-		PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,1,1,1,DIRECT);
+		PID PID_Regler_Winkel(&Eingang_PID_Winkel, &Ausgang_PID_Winkel, &Sollwert_PID_Winkel, 1,0,0,REVERSE);//PID-Regler für Wickelsteuerung
+		PID PID_Regler_Geschwindigkeit(&Eingang_PID_Geschwindigkeit,&Ausgang_PID_Geschwindigkeit,&Sollwert_PID_Geschwindigkeit,0,0,0,DIRECT);
 	#include <CmdMessenger.h>
 		//CmdMessenger Starten
 		CmdMessenger cmdMessenger = CmdMessenger(Serial);
 	#include "Andi_Stepper_Motor.h"
 		//Stepper Motoren initialisieren	
-		Stepper_Motor Motor_Links(true,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
-		Stepper_Motor Motor_Rechts(false,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+		Stepper_Motor Motor_Links(false,Pin_Step_Links,Pin_FAULT_Links,Pin_DIR_Links,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
+		Stepper_Motor Motor_Rechts(true,Pin_Step_Rechts,Pin_FAULT_Rechts,Pin_DIR_Rechts,Pin_Sleep_Motortreiber,Pin_Reset_Motortreiber,Pin_Stepmode_MS1,Pin_Stepmode_MS2,Pin_ENABLE_Motortreiber);
 	#include "EEPROM.h"
 		//Einstellungensdatei erstellen
 		Balancing_Bot_Einstellungen System_Einstellungen;//Einstellungen die im EEPROM abgelegt werden können
@@ -167,8 +167,8 @@ void Einstellungen_mit_Standart_Werten_beschreiben()
 	System_Einstellungen.PID_Regler_Geschwindigkeit_P=0;			//P-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_I=0;			//I-Einstellung für Geschwindigkeits-Regler
 	System_Einstellungen.PID_Regler_Geschwindigkeit_D=0;			//D-Einstellung für Geschwindigkeits-Regler
-	System_Einstellungen.PID_Regler_Winkel_Min=120;					//Minimaler Ausgangswert des Winkel-Reglers
-	System_Einstellungen.PID_Regler_Winkel_Max=-120;				//Maximaler Ausgangswert des Winkel-Reglers
+	System_Einstellungen.PID_Regler_Winkel_Min=-130;					//Minimaler Ausgangswert des Winkel-Reglers
+	System_Einstellungen.PID_Regler_Winkel_Max=130;				//Maximaler Ausgangswert des Winkel-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Min=-5;			//Minimaler Ausgangswert des Geschwindigkeits-Reglers
 	System_Einstellungen.PID_Regler_Geschwindigkeit_Max=5;			//Maximaler Ausgangswert des Geschwindigkeits-Reglers
 	System_Einstellungen.Schrittmodus=Stepper_Motor::Vollschritt;	//Stepmodus der Motorregler
@@ -217,7 +217,7 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 		TCCR2B = 0;					//TCCR2ABRegister zurücksetzen
 		TIMSK2 |= (1 << OCIE2A);	//Interruppt Enable Bit im TIMSK2 setzen (OCIE2A)
 		TCCR2B |= (1 << CS21);		//Vorteiler(TRCC2B) auf 8(CS21) stellen
-		OCR2A = 119;				//Output compare Register einstellen für alle 60µs Formel zum errechnern:
+		OCR2A = 39;				//Output compare Register einstellen für alle 60µs Formel zum errechnern:
 									//Registerwert=20µs/(1s/16Mhz/8)-1=>39
 		TCCR2A |= (1 << WGM21);		//Aktiviere den CTC Modus (clear timer on compare)
 		//Erklärung CTC Modus siehe https://www.heise.de/developer/artikel/Timer-Counter-und-Interrupts-3273309.html
@@ -325,25 +325,7 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 
 
 		}
-		//else if (MotorLinks_Step==false && MotorRechts_Step==false)//beide keinen Schritt
-		//{
-		///*	PORTB=PORTB&0b10011111;*/
-		//	digitalWrite(Pin_Step_Rechts,false);
-		//	digitalWrite(Pin_Step_Links,false);
-		//}
-
 	}
-
-	////Unterprogramm zur Motorensteuerung
-	////Drehzahl ist benötigte Drehzahl für Balancing
-	////Prozent_Rechts/Links entspricht dem Sollwert für den jewaligen Motor in Prozent 100% => Sollwert==Motorwert
-	//void Motoren_Steuerung(double Drehzahl, double Prozent_Rechts, double Prozent_Links)
-	//{
-	//	//if (Sollwert_PID_Winkel+0.9 <Eingang_PID_Winkel || Sollwert_PID_Winkel-0.9 > Eingang_PID_Winkel)
-	//	
-	//		Ausgangsregister_schreiben(Motor_Links.Step(),Motor_Rechts.Step());
-	//	
-	//}
 
 	//Fehlerauswertung
 	void Fehlerauswertung()
@@ -355,12 +337,6 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 	double Spannungsteiler (double R1, double R2, int AnalogEingangsPin)
 	
 	{
-		//double Strom=0.00;
-		//double Spannung=-70.00;
-		//pinMode(AnalogEingangsPin, INPUT);
-		//Strom=(analogRead(AnalogEingangsPin)*5.00/1024.00)/R1;
-		//Spannung=(R1+R2)*Strom;
-		//return Spannung;
 		double Teiler=R2/(R1+R2);
 		pinMode(AnalogEingangsPin, INPUT);
 		double Eingang=analogRead(AnalogEingangsPin);

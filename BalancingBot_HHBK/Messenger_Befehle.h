@@ -123,6 +123,8 @@
 	{
 		MotorenEINAUS=false;   
 
+		Motoren_EINAUS_Schalten(MotorenEINAUS);
+
 		cmdMessenger.sendCmd(cmd_Anzeige_Text,F("MPU Kalibrierung"));
 	
 		cmdMessenger.sendCmd(cmd_Anzeige_Text,F("Bitte Sensor nicht bewegen!"));

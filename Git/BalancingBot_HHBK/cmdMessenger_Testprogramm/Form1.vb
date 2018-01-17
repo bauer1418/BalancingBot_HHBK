@@ -6,19 +6,7 @@ Public Class Form1
     Public COM_Port As IO.Ports.SerialPort = Nothing
     Dim TransportLayer As SerialTransport
     Dim Messenger As CmdMessenger
-    Dim Akkustand_Prozent As Double = 0.0
-    Dim Aufnhamestatus As Boolean = False
-    Dim Aufnhame_Dateiname As String
 
-    'Zyklusdaten
-    Dim Winkel, PIDOut As Double
-    Dim Zykluszeit As Integer
-    Dim Motorenstatus As Boolean
-    Dim Systemstatus As Integer
-    Dim P_Wert As Double
-    Dim I_Wert As Double
-    Dim D_Wert As Double
-    Dim PID_Sollwert As Double
     Enum Befehle
 
         cmd_Statusmeldung           'Statusmeldungen z.B.: Setup beendet
@@ -36,13 +24,6 @@ Public Class Form1
         cmd_Anzeige_Text            'Anzuzeigender Text aus dem Arduino
         cmd_Zyklusdaten             'Zyklusdaten aus dem Arduino
         cmd_PID_Werte               'PID Werte verstellen oder auslesen 1=Werte setzen Winkelregler 2=Werte setzen Geschwindigkeitsregler 3= Werte lesen Winkelregler 4=Werte lesen Geschwindigkeitsregler
-        cmd_Fahrbefehl_Vor      'Fahrbefehl vorwärts Parameter 2 bestimmt die Geschindigkeit
-        cmd_Fahrbefehl_Zurueck      'Fahrbefehl für Rückwärts fahren Parameter 2 bestimmt die Geschwindigkeit
-        cmd_Fahrbefehl_Kurve        'Fahrbefehl um eine Kurve zu fahren Parameter 2 bestimmt Geschwindigkeit 3+4 sind % Angaben wie schnell die Räder links und rechts laufen sollen.
-        cmd_Einstellungen_ins_EEPROM_speichern  'Aktuelle Einstellungen ins EEPROM speichern
-        cmd_Einstellungen_aus_EEPROM_lesen      'Einstellungen aus dem EEPROM lesen und per Serial senden
-        cmd_Akku_Spannungen_senden      'Beide Spannungen senden
-        cmd_PID_Sampletime       'Sampletime der Regler verstellen 1=Winkel 2=Speed
     End Enum
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -78,7 +59,7 @@ Public Class Form1
 
         Try
             If rbbCOMStatus.Checked = False Then
-                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 57600, .DtrEnable = True}}
+                TransportLayer = New SerialTransport With {.CurrentSerialSettings = New SerialSettings With {.PortName = cmbCOMPort.SelectedItem, .BaudRate = 57600, .DtrEnable = False}}
 
 
 
@@ -92,22 +73,8 @@ Public Class Form1
                 AttachCallbacks()
                 AddHandler Messenger.NewLineReceived, AddressOf NewLineReceived
                 AddHandler Messenger.NewLineSent, AddressOf NewLineSent
-                bttCOMVerbinden.Text = "Port trennen"
-                Messenger.Connect()
-            Else
-                Try
-                    If rbbCOMStatus.Checked = True Then
-                        Messenger.Disconnect()
-                        Messenger.Dispose()
-                        TransportLayer.Dispose()
-                        rbbCOMStatus.Checked = False
-                        lbbCOMStatus.Text = "Status: COM getrennt"
-                        bttCOMVerbinden.Text = "Port verbinden"
-                    End If
-                Catch ex As Exception
-                    MsgBox("Fehler beim Schließen des COM Ports!" + vbNewLine + ex.ToString, vbCritical, "Fehler")
-                End Try
 
+                Messenger.Connect()
             End If
         Catch ex As Exception
             rbbCOMStatus.Checked = False
@@ -144,12 +111,6 @@ Public Class Form1
         Messenger.Attach(Befehle.cmd_PID_Winkel_MinMax, AddressOf PID_Winkel_MinMax)
         Messenger.Attach(Befehle.cmd_PID_Winkel_Sollwert, AddressOf PID_Winkel_Sollwert)
         Messenger.Attach(Befehle.cmd_PID_Werte, AddressOf PID_Werte)
-        Messenger.Attach(Befehle.cmd_Fahrbefehl_Vor, AddressOf PID_Werte)
-        Messenger.Attach(Befehle.cmd_Fahrbefehl_Zurueck, AddressOf PID_Werte)
-        Messenger.Attach(Befehle.cmd_Fahrbefehl_Kurve, AddressOf PID_Werte)
-        Messenger.Attach(Befehle.cmd_Akku_Spannungen_senden, AddressOf Neue_Daten_Float)
-        Messenger.Attach(Befehle.cmd_Einstellungen_ins_EEPROM_speichern, AddressOf Neue_Daten_String)
-        Messenger.Attach(Befehle.cmd_Einstellungen_aus_EEPROM_lesen, AddressOf EEPROM_Lesen)
     End Sub
 
     Private Sub NewLineReceived(ByVal sender As Object, ByVal e As CommandEventArgs)
@@ -172,9 +133,9 @@ Public Class Form1
         lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
     Private Sub Akkustatus(ByVal arguments As ReceivedCommand)
-        Akkustand_Prozent = arguments.ReadFloatArg()
-        LbbAkku.Text = ("Akku:" + Akkustand_Prozent.ToString(0.0) + "%")
-        'MsgBox("Akkustand: " + arguments.ReadFloatArg().ToString + "%")
+        MsgBox(arguments.CmdId)
+        lbEmpfangeDaten.Items.Add("Akkustand: " + arguments.ReadFloatArg().ToString)
+        lbEmpfangeDaten.SelectedIndex = lbEmpfangeDaten.Items.Count - 1
     End Sub
     Private Sub Neue_Daten_String(ByVal arguments As ReceivedCommand)
         While arguments.Available = True
@@ -189,28 +150,16 @@ Public Class Form1
         End While
     End Sub
     Private Sub Zyklusdaten_auswerten(ByVal arguments As ReceivedCommand)
+        Dim Winkel, PIDOut As Double
+        Dim Zykluszeit As Integer
+        Dim Motorenstatus As Boolean
+        Dim Systemstatus As Integer
         Winkel = arguments.ReadFloatArg()
         PIDOut = arguments.ReadFloatArg()
         Motorenstatus = arguments.ReadBoolArg()
-        If Motorenstatus = True Then
-            bttMotorenEINAUS.BackColor = Color.Green
-            bttMotorenEINAUS.Text = "Motoren EIN"
-        Else
-            bttMotorenEINAUS.BackColor = Color.Red
-            bttMotorenEINAUS.Text = "Motoren AUS"
-        End If
         Zykluszeit = arguments.ReadUInt32Arg()
         Systemstatus = arguments.ReadInt32Arg()
-        P_Wert = arguments.ReadDoubleArg()
-        I_Wert = arguments.ReadDoubleArg()
-        D_Wert = arguments.ReadDoubleArg()
-        PID_Sollwert = arguments.ReadDoubleArg()
-        If Aufnhamestatus = True Then
-            Dim Daten_Aufnahme As String
-            Daten_Aufnahme = DateAndTime.Now.ToString + ";" + Winkel.ToString + ";" + PIDOut.ToString + ";" + Zykluszeit.ToString + ";" + Motorenstatus.ToString + ";" + Akkustand_Prozent.ToString + ";" + _
-                             P_Wert.ToString + ";" + I_Wert.ToString + ";" + D_Wert.ToString + ";" + PID_Sollwert.ToString + vbNewLine
-            My.Computer.FileSystem.WriteAllText(Aufnhame_Dateiname, Daten_Aufnahme, True)
-        End If
+
         lbbZyklusdaten.Text = ("Winkel:" + Winkel.ToString("0.00°") + " PIDOUT:" + PIDOut.ToString("00.00") + " Motoren:" + Motorenstatus.ToString + " Zykluszeit:" + Zykluszeit.ToString + "µs")
 
     End Sub
@@ -238,84 +187,6 @@ Public Class Form1
             MsgBox("Unbekannte Reglernummer empfangen " + Einstellung.ToString)
         End If
 
-    End Sub
-
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Akku_Timer.Tick
-        If rbbCOMStatus.Checked = True Then
-            Dim Command
-            Command = New SendCommand(Befehle.cmd_Akkustand_Prozent)
-            Messenger.SendCommand(Command)
-
-        End If
-    End Sub
-
-    Private Sub bttPID_Winkel_ändern_Click(sender As Object, e As EventArgs) Handles bttPID_Winkel_ändern.Click
-        PID_Werte_senden(1)
-    End Sub
-
-    Private Sub bttPID_Speed_ändern_Click(sender As Object, e As EventArgs) Handles bttPID_Speed_ändern.Click
-        PID_Werte_senden(2)
-    End Sub
-
-    Private Sub PID_Werte_senden(ByVal Reglernummer As Integer)
-        Dim P_Wert, I_Wert, D_Wert As Double
-        Dim Text As String
-        If Reglernummer = 1 Then
-            Text = "Dateneingabe Winkelregler Nah"
-
-        ElseIf Reglernummer = 5 Then
-            Text = "Dateneingabe Winkelregler Fern"
-        Else
-            Text = "Dateneingabe Speedregler"
-        End If
-        Try
-            P_Wert = InputBox("Bitte P-Wert eingeben", Text)
-            I_Wert = InputBox("Bitte I-Wert eingeben", Text)
-            D_Wert = InputBox("Bitte D-Wert eingeben", Text)
-            If rbbCOMStatus.Checked = True Then
-                Dim Command = New SendCommand(Befehle.cmd_PID_Werte, Reglernummer)
-                Command.AddArgument(P_Wert)
-                Command.AddArgument(I_Wert)
-                Command.AddArgument(D_Wert)
-                Messenger.SendCommand(Command)
-            End If
-        Catch
-            MsgBox("Fehler bei PID Eingabe/Senden", vbCritical, "Fehler")
-        End Try
-    End Sub
-
-    Private Sub bttPIDFern_Click(sender As Object, e As EventArgs) Handles bttPIDFern.Click
-        PID_Werte_senden(5)
-    End Sub
-
-    Private Sub bttMotorenEINAUS_Click(sender As Object, e As EventArgs) Handles bttMotorenEINAUS.Click
-
-        Try
-            If rbbCOMStatus.Checked = True Then
-                Dim Command = New SendCommand(Befehle.cmd_MotorenEINAUS, Not Motorenstatus)
-                Messenger.SendCommand(Command)
-            End If
-        Catch
-            MsgBox("Fehler bei Motoren Ein/Aus Schalten", vbCritical, "Fehler")
-        End Try
-
-    End Sub
-    Private Sub EEPROM_Lesen(ByVal arguments As ReceivedCommand)
-        MsgBox("Anzahl der Screibvorgänge auf dem EEPROM:" + arguments.ReadBinInt16Arg.ToString, vbInformation, "EEPROM Daten gelesen")
-
-    End Sub
-
-
-
-    Private Sub bttAufnahme_Click(sender As Object, e As EventArgs, Optional ByVal Dateiname As String = "PID Analyse ") Handles bttAufnahme.Click
-        If Aufnhamestatus = False Then
-            Aufnhame_Dateiname = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\" + Dateiname + DateAndTime.Now.ToString("dd.MM.yyyy HH.mm.ss") + ".txt"
-            bttAufnahme.BackColor = Color.Green
-            Aufnhamestatus = True
-        Else
-            bttAufnahme.BackColor = Color.Red
-            Aufnhamestatus = False
-        End If
     End Sub
 End Class
 
