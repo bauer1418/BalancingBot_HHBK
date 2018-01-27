@@ -109,7 +109,7 @@ void loop()
 		pid_output = Ausgang_PID_Winkel;
 		//Serial.print("PIDraw ");
 		//Serial.println(pid_output);
-		//if (Ausgang_PID_Winkel < 2.0 && Ausgang_PID_Winkel > -2.0)pid_output = 0.0;                      //Create a dead-band to stop the motors when the robot is balanced
+		if (Ausgang_PID_Winkel < 2.0 && Ausgang_PID_Winkel > -2.0)pid_output = 0.0;                      //Create a dead-band to stop the motors when the robot is balanced
 
 
 
