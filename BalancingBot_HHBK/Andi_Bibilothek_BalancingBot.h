@@ -47,6 +47,7 @@
 
 	//Fehler und Statusüberwachung
 	byte Status = 0;						//Systemstatus Variable Bedeutung siehe Enum Statusmeldungen
+	byte alter_Status = 0;					//Speicher um Änderung des Systemstatus zu Überwachen
 	byte Fehlerspeicher=0;					//Fehlerstatus Bedeutung siehe Enum Fehlermeldungen
 
 	unsigned long letzer_Step_Links=0;		//Zeitpunkt des letzten Steps für Motor Links
@@ -58,6 +59,7 @@
 	void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten);
 	void Pin_Setup();
 	bool Schalt_Zeitpunkt (double Pausenzeit, double letzter_Schaltzeitpunkt);
+	byte Status_Aenderungsueberwachung(byte aktueller_Status);
 	void test();
 	void Motoren_EINAUS_Schalten(bool AN_AUS);
 	void Lueftersteuerung_Temperatur(double Temperatur, int Luefter_Pin);
@@ -70,7 +72,7 @@
 	bool Umkippschutz(int MaxWinkel, double EingangsWinkel);
 
 
-		//Lüfter
+	//Lüfter
 	int LuefterPlatineDrehzahl=0;			//Lüfterdrehzahl in % für Platine
 	int LuefterGehaeuseDrehzahl=0;			//Lüfterdrehzahl in % für Gehäuse
 
@@ -247,6 +249,15 @@ void EEPROM_Werte_aktiveren(Balancing_Bot_Einstellungen EEPROM_Daten)
 		}
 	}
 
+	//Systemstatusüberwachug bei Änderung des Status zum letzten wird der neue Status gesendet
+	byte Status_Aenderungsueberwachung(byte aktueller_Status)
+	{
+		if (aktueller_Status!=alter_Status)
+		{
+			Statusmeldung();
+		}
+		alter_Status = aktueller_Status;
+	}
 
 	void test()
 	{

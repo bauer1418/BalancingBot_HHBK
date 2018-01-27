@@ -17,7 +17,7 @@ volatile double Sollwertanpassung = 0.0;	//Anpassungswert für Stillstand
 #include "Andi_ZeitTakt_Funktionen.h"
 
 double PIDOUT_Faktor = 1.0;//Faktor in Linear Funktion unter Bruchstrich Orginal 9.0
-double Linear_Multiplikationsfaktor = 5000.0;//Wert mit dem die Linearfuktion multipliziert wird Orginalwert = 5500
+double Linear_Multiplikationsfaktor = 8500.0;//Wert mit dem die Linearfuktion multipliziert wird Orginalwert = 5500
 bool Akkustatus = true; //Akku i.O. = true n.i.O. = false
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,8 @@ void loop()
 {
 	Zykluszeit = Zykluszeit_Messung();
 	Allgemeine_Zeitfunktion.ZeitTakt();
-	
+	Status_Aenderungsueberwachung(Status);
+
 	//MPU Zyklus nur ausführen wenn MPU nicht gestört ist
 	if (Fehlerspeicher!=MPU_NOT_FOUND && Fehlerspeicher!=MPU_READ_FAILED && Fehlerspeicher!=MPU_READ_TIMEOUT && Fehlerspeicher!=MPU_Write_FAILED)
 	{
@@ -91,17 +92,16 @@ void loop()
 		PID_Regler_Winkel.SetMode(AUTOMATIC);
 		analogWrite(Pin_Platinenluefter,204);//80% Lüfterdrehzahl
 		
-		//Eingang_PID_Geschwindigkeit=-Ausgang_PID_Winkel;
-		//PID_Regler_Geschwindigkeit.Compute();
-		//Sollwert_PID_Winkel=Ausgang_PID_Geschwindigkeit;
+		Eingang_PID_Geschwindigkeit = -pid_output / 100;
+		/*Eingang_PID_Geschwindigkeit=-Ausgang_PID_Winkel/100;*/
+		PID_Regler_Geschwindigkeit.Compute();
+		Sollwert_PID_Winkel=Ausgang_PID_Geschwindigkeit;
 		
 		//Winkel auslesen
 		Eingang_PID_Winkel=GET_KalmanWinkelY();
 		
-
-
 		//Sollwertanpassung für Stillstand
-		Sollwert_PID_Winkel = Sollwert_Steuerung + Sollwertanpassung;
+		//Sollwert_PID_Winkel = Sollwert_Steuerung + Sollwertanpassung;
 		//Sollwert_PID_Winkel = 0.0;
 
 		//PID-Regler ausführen
@@ -109,7 +109,7 @@ void loop()
 		pid_output = Ausgang_PID_Winkel;
 		//Serial.print("PIDraw ");
 		//Serial.println(pid_output);
-		if (Ausgang_PID_Winkel < 2.0 && Ausgang_PID_Winkel > -2.0)pid_output = 0.0;                      //Create a dead-band to stop the motors when the robot is balanced
+		//if (Ausgang_PID_Winkel < 2.0 && Ausgang_PID_Winkel > -2.0)pid_output = 0.0;                      //Create a dead-band to stop the motors when the robot is balanced
 
 
 
@@ -149,11 +149,11 @@ void loop()
 		throttle_right_motor = right_motor;
 
 		//The self balancing point is adjusted when there is not forward or backwards movement from the transmitter. This way the robot will always find it's balancing point
-		if (Sollwert_Steuerung == 0.0) //If the setpoint is zero degrees
-		{                                              
-			if (Ausgang_PID_Winkel < 0.0)Sollwertanpassung -= 0.003;  //Increase the self_balance_pid_setpoint if the robot is still moving forewards
-			if (Ausgang_PID_Winkel > 0.0)Sollwertanpassung += 0.003;  //Decrease the self_balance_pid_setpoint if the robot is still moving backwards
-		}
+		//if (Sollwert_Steuerung == 0.0) //If the setpoint is zero degrees
+		//{                                              
+		//	if (Ausgang_PID_Winkel < 0.0)Sollwertanpassung -= 0.003;  //Increase the self_balance_pid_setpoint if the robot is still moving forewards
+		//	if (Ausgang_PID_Winkel > 0.0)Sollwertanpassung += 0.003;  //Decrease the self_balance_pid_setpoint if the robot is still moving backwards
+		//}
 
 		////Motorendrehzahl festlegen
 		//Motor_Rechts.Drehzahl_festlegen(Ausgang_PID_Winkel, 100);
@@ -162,9 +162,10 @@ void loop()
 	}
 	else
 	{
-		Sollwertanpassung=0.0;
+		
 		analogWrite(Pin_Platinenluefter,0);
 		PID_Regler_Winkel.Ruecksetzen_P_I_D_Teile();
+		PID_Regler_Geschwindigkeit.Ruecksetzen_P_I_D_Teile();
 	}
 
 

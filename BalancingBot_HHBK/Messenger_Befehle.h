@@ -217,6 +217,7 @@
 		}
 			else if (Regler== 4)//Nur Anzeige der PID Werte für Geschwindigkeitsregler
 		{
+			cmdMessenger.sendCmdStart(cmd_P_I_D_Werte);
 			cmdMessenger.sendCmdArg(2);
 			cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKp());
 			cmdMessenger.sendCmdArg(PID_Regler_Geschwindigkeit.GetKi());
@@ -262,6 +263,11 @@
 		{
 			System_Einstellungen.PID_Winkel_Sampletime = cmdMessenger.readInt16Arg();
 			PID_Regler_Winkel.SetSampleTime(System_Einstellungen.PID_Winkel_Sampletime);
+		}
+		if (Regler == 2)
+		{
+			System_Einstellungen.PID_Geschwindigkeit_Sampletime = cmdMessenger.readInt16Arg();
+			PID_Regler_Geschwindigkeit.SetSampleTime(System_Einstellungen.PID_Geschwindigkeit_Sampletime);
 		}
 
 	}
